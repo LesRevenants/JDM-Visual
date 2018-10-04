@@ -16,8 +16,9 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 
 
 public class UpdateManagerTest {
@@ -28,8 +29,8 @@ public class UpdateManagerTest {
 
     public static List<RelationQuery> queries;
 
-    @BeforeAll
-    static void setUp() throws IOException{
+    @BeforeClass
+    public static void setUp() throws IOException{
     	
         prop = new Properties();
         prop.put(MasterStore.ENTRIES_KEY,"data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt");
@@ -139,7 +140,6 @@ public class UpdateManagerTest {
     @Test
     public void testNeo4_Setup() {
     	WriteRelationStore store = masterStore.getPersistentStore();
-    	
     }
 
 

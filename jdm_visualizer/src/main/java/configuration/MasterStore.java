@@ -33,7 +33,7 @@ public class MasterStore {
         this.properties = properties;
         termStore = new MemoryTermStore();
         inputStore = new JDM_RelationStore();   
-        persistentStore = new Neo4J_RelationStore(Integer.parseInt(properties.getProperty(MAX_RELATION_IN_DB_KEY)),properties);
+//        persistentStore = new Neo4J_RelationStore(Integer.parseInt(properties.getProperty(MAX_RELATION_IN_DB_KEY)),properties);
         build();
     }
 
