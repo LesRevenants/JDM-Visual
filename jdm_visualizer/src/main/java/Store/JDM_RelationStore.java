@@ -14,11 +14,9 @@ import java.util.logging.Logger;
 public class JDM_RelationStore implements ReadRelationStore{
 
     private RequeterRezo requeterRezo;
-    final static Logger logger = Logger.getLogger("JDM_RelationStore");
 
     public JDM_RelationStore(){
         requeterRezo = new RequeterRezo(65536);
-        logger.info("JDM_RelationStore init[OK]");
     }
 
 
@@ -29,7 +27,7 @@ public class JDM_RelationStore implements ReadRelationStore{
      * @param mapToQuery
      * @param allRelations
      */
-    private void query(Collection<String> relation_to_search,Set<String> terms_searched, HashMap<String, ArrayList<Terme>> mapToQuery,HashMap<String, ArrayList<Terme>> allRelations) {
+    private void query(Collection<String> relation_to_search,Set<String> terms_searched, String x, HashMap<String, ArrayList<Terme>> mapToQuery,HashMap<String, ArrayList<Relation>> allRelations) {
 
         boolean are_y_terms_filtered = ! (terms_searched == null || terms_searched.isEmpty());
 
@@ -39,7 +37,7 @@ public class JDM_RelationStore implements ReadRelationStore{
                 for(Terme terme : termes){
                     if(! are_y_terms_filtered  || terms_searched.contains(terme.getTerme())){
                         allRelations.putIfAbsent(relation_type,new ArrayList<>());
-                        allRelations.get(relation_type).add(terme);
+                        allRelations.get(relation_type).add(new Relation(0,relation_type,x,terme.getTerme(),(int) terme.getPoids()));
                     }
                 }
             }
@@ -48,7 +46,7 @@ public class JDM_RelationStore implements ReadRelationStore{
     }
 
     @Override
-    public Map<String, ArrayList<Terme>> query(RelationQuery query) throws Exception{
+    public Map<String, ArrayList<Relation>> query(RelationQuery query) throws Exception{
         String x = query.getX();
         if(x == null)
             return null;
@@ -56,7 +54,7 @@ public class JDM_RelationStore implements ReadRelationStore{
         if(mot == null)
             return null;
 
-        HashMap<String, ArrayList<Terme>> allRelations = new HashMap<>();
+        HashMap<String, ArrayList<Relation>> allRelations = new HashMap<>();
         Set<String> relations_searched = query.getRelations_searched();
         Set<String> terms_searched = query.getTerm_searched();
 
@@ -67,11 +65,11 @@ public class JDM_RelationStore implements ReadRelationStore{
         Collection<String> relations_to_search;
         if(in){
             relations_to_search = are_relation_filtered ? relations_searched : mot.getRelations_entrantes().keySet();
-            query(relations_to_search,terms_searched,mot.getRelations_entrantes(),allRelations);
+            query(relations_to_search,terms_searched,x,mot.getRelations_entrantes(),allRelations);
         }
         if(isOut){
             relations_to_search = are_relation_filtered ? relations_searched : mot.getRelations_sortantes().keySet();
-            query(relations_to_search,terms_searched,mot.getRelations_sortantes(),allRelations);
+            query(relations_to_search,terms_searched,x,mot.getRelations_sortantes(),allRelations);
         }
         return allRelations;
     }

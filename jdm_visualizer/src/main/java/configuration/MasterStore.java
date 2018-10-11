@@ -2,39 +2,88 @@ package configuration;
 
 import Store.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-public class MasterStore {
+import org.apache.logging.log4j.core.util.FileUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
+public class MasterStore {
+	
     public final static String
                             ENTRIES_KEY = "ENTRIES",
                             MWE_ENTRIES_KEY ="MWE_ENTRIES",
                             IS_UPDATE_ENTRIES_KEY = "IS_UPDATE_ENTRIES",
                             IS_UPDATE_MWE_ENTRIES_KEY = "IS_UPDATE_MWE_ENTRIES",
-                            RELATION_TYPES_ENTRIES_KEY = "LAST_OUTPUT_STATS",
-                            MAX_RELATION_IN_DB_KEY = "MAX_RELATION_IN_DB ";
+                            RELATION_TYPES_ENTRIES_KEY = "LAST_OUTPUT_STATS";
 
     private Properties properties;
-    private TermStore termStore;
+    private MemoryTermStore termStore;
     private ReadRelationStore inputStore;
     private WriteRelationStore persistentStore;
     private RelationTypeStore relationTypeStore;
+    
+    private static final String[] filters = {"\'","&","\"","$","+","-",":",".","!","(","*","/","\\"};
+    private static final HashSet<String> forbidden_set = new HashSet<String>(Arrays.asList(filters));
+    
  
-    final static Logger logger = Logger.getLogger("JDM_RelationStore");
-
-    public MasterStore(Properties properties) throws IOException {
-        this.properties = properties;
-        termStore = new MemoryTermStore();
+    final static Logger logger = Logger.getLogger("MasterStore");
+    
+    public MasterStore() {
+    	termStore = new MemoryTermStore();
+        logger.info("InMemoryTermStore init[OK]");
+        
         inputStore = new JDM_RelationStore();   
-//        persistentStore = new Neo4J_RelationStore(Integer.parseInt(properties.getProperty(MAX_RELATION_IN_DB_KEY)),properties);
-        build();
+        logger.info("JDM_RelationStore init[OK]");
+    }
+
+    
+    public MasterStore(String config_file_path) throws IOException, SQLException {
+    	this();
+    	byte[] encodedjSON = Files.readAllBytes(Paths.get(config_file_path));
+    	String stringJSON = new String(encodedjSON);
+		JSONObject rootObj =  new JSONObject(stringJSON);
+		
+		JSONObject memoryObj = rootObj.getJSONObject("memory");
+		String serialized_terms = memoryObj.getString("serialized_terms_path");
+		
+		if(serialized_terms == null || serialized_terms.isEmpty()) {
+			JSONArray terms_paths = memoryObj.getJSONArray("terms_paths");
+			for (int i = 0; i < terms_paths.length(); i++) {
+				String path = terms_paths.getString(i);
+				List<String> lines = Files.readAllLines(Paths.get(path),StandardCharsets.ISO_8859_1);
+				addEncodedTerms(lines);
+		        logger.info("\tdata_block:"+path+" insertion[OK]");
+			}
+		}
+		else {
+			
+		}
+		
+		String relation_types_path = memoryObj.getString("relation_types_path");
+		List<String> relation_types = Files.readAllLines(Paths.get(relation_types_path));
+		relationTypeStore = new MemoryRelationTypeStore(relation_types);
+		
+		JSONObject persistentObj = rootObj.getJSONObject("persistent");
+		JSONObject storeObj = persistentObj.getJSONObject("stores");
+		JSONObject neo4jObj = storeObj.getJSONObject("Neo4j");
+		persistentStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore);
+		
+        logger.info("TermStore Building [OK]");
+
+		
     }
 
     public Properties getProperties() {
@@ -50,7 +99,7 @@ public class MasterStore {
 		return persistentStore;
 	}
 
-	public TermStore getTermStore() {
+	public MemoryTermStore getTermStore() {
         return termStore;
     } 
 	
@@ -59,39 +108,34 @@ public class MasterStore {
 		return relationTypeStore;
 	}
 
-	private void build() throws IOException {
-
-        String entries_path = properties.getProperty(ENTRIES_KEY);
-        String mwe_entries_path = properties.getProperty(MWE_ENTRIES_KEY);
-        String relation_types_path = properties.getProperty(RELATION_TYPES_ENTRIES_KEY);
-        
-        Boolean entries_update = Boolean.parseBoolean(properties.getProperty(IS_UPDATE_ENTRIES_KEY));
-        Boolean mwe_entries_update = Boolean.parseBoolean(properties.getProperty(IS_UPDATE_MWE_ENTRIES_KEY));
-
-        if(! entries_update){
-            List<String> entries = Files.readAllLines(Paths.get(entries_path),StandardCharsets.ISO_8859_1);
-            addEncodedTerms(entries);
-        }
-        if(! mwe_entries_update){
-            List<String> mwe_entries = Files.readAllLines(Paths.get(mwe_entries_path),StandardCharsets.ISO_8859_1);
-            addEncodedTerms(mwe_entries);
-        }
-        List<String> relation_types = Files.readAllLines(Paths.get(relation_types_path),StandardCharsets.ISO_8859_1);
-        relationTypeStore = new MemoryRelationTypeStore(relation_types);
-
-        logger.info("TermStore Building [OK]");
-    }
-
     private void addEncodedTerms(Collection<String> termList){
         for (String line : termList) {
             if (line != null && !line.isEmpty()) {
+            	
                 String[] parts = line.split(";");
                 if (parts.length == 2) {
                     Integer id = Integer.parseInt(parts[0]);
                     String name = parts[1];
-                    termStore.addTerm(id,name);
+                    if(checkName(name)) {
+                        termStore.addTerm(id,name);
+                    }
                 }
             }
         }
     }
+    
+    private boolean checkName(String name) {   	
+    	if(forbidden_set.contains(name.substring(0, 1))) {
+    		return false;
+    	}  	
+    	try {
+    		Integer.parseInt(name); 	
+    		return false;
+    	}
+    	catch (NumberFormatException ex)
+        {
+            return true;
+        }
+    }
+        
 }

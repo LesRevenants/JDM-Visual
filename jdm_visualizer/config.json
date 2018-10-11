@@ -1,0 +1,24 @@
+{
+	"memory":{
+		"serialized_terms_path":"",	
+		"terms_paths":["data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt","data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt"]	,	
+		"relation_types_path":"data/relation_types.txt"
+	},
+
+	"relation_types":{
+		"path":"data/relations.txt"
+	},
+	"persistent":{
+
+		"stores": {
+			"Neo4j":{
+				"max_relation":10000000,
+				"update_terms":true,
+				"url":"bolt://localhost:7687",
+				"user":"neo4j",
+				"pwd":"vLGGTq5eiHFZwn"
+			}
+		}
+	}
+	
+}

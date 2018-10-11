@@ -1,8 +1,8 @@
 package les_revenants.jdm_visualizer;
 
-import RequeterRezo.Terme;
 import Store.*;
 import configuration.MasterStore;
+import core.Relation;
 import core.RelationQuery;
 
 import static org.junit.Assert.assertNotNull;
@@ -11,14 +11,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 
 public class UpdateManagerTest {
@@ -29,19 +29,19 @@ public class UpdateManagerTest {
 
     public static List<RelationQuery> queries;
 
-    @BeforeClass
-    public static void setUp() throws IOException{
+    @BeforeAll
+    static void setUp() throws IOException, NumberFormatException, SQLException{
     	
-        prop = new Properties();
-        prop.put(MasterStore.ENTRIES_KEY,"data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt");
-        prop.put(MasterStore.IS_UPDATE_ENTRIES_KEY,false);
-        prop.put(MasterStore.MWE_ENTRIES_KEY,"data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt");
-        prop.put(MasterStore.RELATION_TYPES_ENTRIES_KEY,"data/relations.txt");
-        prop.put(MasterStore.IS_UPDATE_MWE_ENTRIES_KEY,false);
-        prop.put(MasterStore.MAX_RELATION_IN_DB_KEY,""+1000000);
-        prop.put(Neo4J_RelationStore.USER_KEY,"neo4j");
-        prop.put(Neo4J_RelationStore.PASSWORD_KEY,"vLGGTq5eiHFZwn");
-        prop.put(Neo4J_RelationStore.SERVER_URI_KEY,"bolt://localhost:7687");
+//        prop = new Properties();
+//        prop.put(MasterStore.ENTRIES_KEY,"data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt");
+//        prop.put(MasterStore.IS_UPDATE_ENTRIES_KEY,false);
+//        prop.put(MasterStore.MWE_ENTRIES_KEY,"data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt");
+//        prop.put(MasterStore.RELATION_TYPES_ENTRIES_KEY,"data/relations.txt");
+//        prop.put(MasterStore.IS_UPDATE_MWE_ENTRIES_KEY,false);
+//        prop.put(MasterStore.MAX_RELATION_IN_DB_KEY,""+1000000);
+//        prop.put(Neo4J_RelationStore.USER_KEY,"neo4j");
+//        prop.put(Neo4J_RelationStore.PASSWORD_KEY,"vLGGTq5eiHFZwn");
+//        prop.put(Neo4J_RelationStore.SERVER_URI_KEY,"bolt://localhost:7687");
 
         queries=new ArrayList<>();
         queries.add(new RelationQuery("requin",null,true,true,null));
@@ -53,19 +53,19 @@ public class UpdateManagerTest {
         queries.add(new RelationQuery("ours",new HashSet<String>(Arrays.asList("felin","souris","nom","miel")),true,true,new HashSet<String>(Arrays.asList("r_isa","r_associated","r_has_part"))));
         queries.add(new RelationQuery("chat",new HashSet<String>(Arrays.asList("felin","souris","nom")),true,true,new HashSet<String>(Arrays.asList("r_isa","r_pos"))));
 
-        entries = Files.readAllLines(Paths.get(prop.getProperty(MasterStore.ENTRIES_KEY)),StandardCharsets.ISO_8859_1);
-        mweEntries = Files.readAllLines(Paths.get(prop.getProperty(MasterStore.MWE_ENTRIES_KEY)),StandardCharsets.ISO_8859_1);
+        entries = Files.readAllLines(Paths.get("data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt"),StandardCharsets.ISO_8859_1);
+        mweEntries = Files.readAllLines(Paths.get("data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt"),StandardCharsets.ISO_8859_1);
 
         Instant t1 = Instant.now();
         System.out.println("\nSetUp[START]");
-        masterStore = new MasterStore(prop);
+        masterStore = new MasterStore("data/config.json");
         System.out.println("SetUp [OK] in : "+Duration.between(t1,Instant.now()).toMillis() + "ms");
     }
 
 
     @Test
     public void testCachedStoreInsertion()  throws IOException{
-        TermStore store = masterStore.getTermStore();
+        ReadTermStore store = masterStore.getTermStore();
         Map<String,Integer> termIndex = store.getTermIndex();
         Collection<String> terms = store.getTermsName();
         Collection<String> mweTerms = store.getMweTermsURI();
@@ -80,7 +80,7 @@ public class UpdateManagerTest {
 
     @Test
     public void testSearchTerms() throws IOException {
-        TermStore store = masterStore.getTermStore();
+        MemoryTermStore store = masterStore.getTermStore();
 
 
         Instant t1 = Instant.now();
@@ -105,7 +105,7 @@ public class UpdateManagerTest {
 
         for(RelationQuery query : queries){
             Instant t2 = Instant.now();
-            Map<String,ArrayList<Terme>> results = relationStore.query(query);
+            Map<String,ArrayList<Relation>> results = relationStore.query(query);
             long time = Duration.between(t2,Instant.now()).toMillis();
             System.out.println(query.toString()+" : ");
             System.out.println("\t"+nbResult(results)+" relations found, time : "+time+ "ms");
@@ -138,13 +138,41 @@ public class UpdateManagerTest {
     }
     
     @Test
-    public void testNeo4_Setup() {
-    	WriteRelationStore store = masterStore.getPersistentStore();
+    public void testNeo4_Setup() throws Exception {
+    	
+    	ReadRelationStore inputStore = masterStore.getInputStore();
+    	WriteRelationStore writeStore = masterStore.getPersistentStore();
+    	
+        Instant t1 = Instant.now();
+        System.out.println("Neo4J insertion [START]");
+        
+    	for(RelationQuery query : queries){
+    		 Instant t2 = Instant.now();
+    		 Map<String,ArrayList<Relation>> results = inputStore.query(query);
+    		 results.forEach((k,v)-> {
+    			 v.forEach(relation -> writeStore.addRelation(relation));
+    		 });
+    		 long time = Duration.between(t2,Instant.now()).toMillis();
+    		 System.out.println("\t"+nbResult(results)+" relations inserted, time : "+time+ "ms");
+    	}
+        System.out.println("\n\"Neo4Jinsertion  [OK] in : "+Duration.between(t1,Instant.now()).toMillis()+ "ms");
+
+    	
+//    	List<String> lines = new ArrayList<>();
+//    	lines.add("id,name");
+//    	
+//    	for(String term : terms ) {
+//    		lines.add(termStore.getTermId(term)+","+term);
+//    	}
+//    	Files.write(Paths.get("load.csv"),lines);
+//    	System.out.println("terms writed into CSV [OK]");
+     	System.out.println("TestNeo4_Setup[OK]");
+
     }
 
 
 
-    private int nbResult(Map<String,ArrayList<Terme>> results){
+    private int nbResult(Map<String,ArrayList<Relation>> results){
         Integer i = 0;
         if(results == null)
             return i;
@@ -155,14 +183,14 @@ public class UpdateManagerTest {
     }
 
 
-    private void assertEncodedList(TermStore store, Collection<String> entries, AtomicInteger i, AtomicInteger totalDicoSize){
+    private void assertEncodedList(ReadTermStore store, Collection<String> entries, AtomicInteger i, AtomicInteger totalDicoSize){
         for (String line : entries) {
             if (line != null && !line.isEmpty()) {
                 String[] parts = line.split(";");
                 if (parts.length == 2) {
                     Integer id = Integer.parseInt(parts[0]);
                     String name = parts[1];
-                    assertNotNull(store.getTermId(name));
+//                    assertNotNull(store.getTermId(name));
                     store.getTermName(id);
                     store.getMweTermName(id);
                     i.incrementAndGet();

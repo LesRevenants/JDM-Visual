@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class MemoryTermStore implements TermStore{
+public class MemoryTermStore implements ReadTermStore, WriteTermStore{
 
     private PatriciaTrie<Integer> termsTrie;
     private int total_term_size, mwe_total_term_size;
@@ -27,7 +27,7 @@ public class MemoryTermStore implements TermStore{
   
 
     @Override
-    public boolean addTerm(int id, String name) {
+    public void addTerm(int id, String name) {
         boolean is_mwe = name.contains("_") || name.contains(" ") || name.contains("-");
         // must optimize research with regex or search algorithm which exploit the set of mwe word identifier characters
 
@@ -43,7 +43,7 @@ public class MemoryTermStore implements TermStore{
                 termsByIds.put(id, name);
                 mwe_total_term_size += name.length();
             }
-            return true;
+            return;
         }
         if (id != termId) {
             if (!is_mwe) {
@@ -54,15 +54,13 @@ public class MemoryTermStore implements TermStore{
                 mweTermsByIds.remove(termId);
                 mweTermsByIds.put(id, name);
 
-            }
-            return true;
+            }         
         }
-        return false;
     }
 
 
     @Override
-    public void reset() {
+    public void resetTerms() {
         termsTrie.clear();
         termsByIds.clear();
         mweTermsByIds.clear();
@@ -171,6 +169,14 @@ public class MemoryTermStore implements TermStore{
 	@Override
 	public String getMweTermName(int termId) {
 		return mweTermsByIds.get(termId);
+	}
+
+
+
+	@Override
+	public boolean addTerm(Collection<Integer> ids, Collection<String> names) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 

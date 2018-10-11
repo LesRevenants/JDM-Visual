@@ -1,44 +1,86 @@
 package Store;
 
-import RequeterRezo.Terme;
 import core.Relation;
 import core.RelationQuery;
 
-import org.neo4j.driver.v1.AuthToken;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import org.apache.commons.collections4.trie.PatriciaTrie;
+import org.json.JSONObject;
 import org.neo4j.driver.v1.AuthTokens;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.GraphDatabase;
-
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Properties;
-import java.util.logging.Logger;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Transaction;
+import org.neo4j.driver.v1.TransactionWork;
+import org.neo4j.driver.v1.Values;
 
 public class Neo4J_RelationStore implements ReadRelationStore,WriteRelationStore{
 
 
     private int max_size;
-    private Driver neo4jDriver;
-    final static Logger logger = Logger.getLogger("Neo4J_RelationStore");
+    private Driver driver;
     
-    public static final String SERVER_URI_KEY = "SERVER_URI", USER_KEY = "USER", PASSWORD_KEY = "PASSWORD";
+//    public static final String create_index_query = "CREATE INDEX ON :Term(id)"
     
+    public static final String insert_node_query = "CREATE (t:Term {name:$name, id:$id } )";
+    
+    public static final String insert_relation_query_p1 = 
+    		"MATCH (t1:Term {name:$n1}) MATCH (t2:Term {name:$n2}) CREATE (t1)-[:`"
+    		,insert_relation_query_p2 = "` {weight:$w}]-> (t2)";
+    
+//	"MATCH (t1:Term {id:$id}) MATCH (t2:Term {id:$id2}) CREATE (t1)-[:$rid {weight:$w}]-> (t2)";
 
-    public Neo4J_RelationStore(int max_size,Properties prop) {
-        this.max_size = max_size;
-        String db_server = prop.getProperty(SERVER_URI_KEY);
-        String user = prop.getProperty(USER_KEY);
-        String pwd = prop.getProperty(PASSWORD_KEY);
-        neo4jDriver = GraphDatabase.driver(db_server,AuthTokens.basic(user, pwd));
-        logger.info("Neo4J server access [OK]");
+    private PatriciaTrie<String> queries;
+    final static Logger logger = Logger.getLogger("Neo4J_RelationStore");
+
+    public Neo4J_RelationStore(JSONObject prop, RelationTypeStore relationTypeStore) throws SQLException {
+    	
+        this.max_size = prop.getInt("max_relation");
+        String db_server = prop.getString("url");
+        String user = prop.getString("user");
+        String pwd = prop.getString("pwd");       
+        driver = GraphDatabase.driver(db_server, AuthTokens.basic(user,pwd));
+        
+        queries = new PatriciaTrie<>();        
+        relationTypeStore.getNames().forEach(r_name -> {
+			queries.put(r_name,insert_relation_query_p1+r_name+insert_relation_query_p2);
+		});
     }
+    
+    
 
 
     @Override
-    public Map<String, ArrayList<Terme>> query(RelationQuery query) throws Exception {
-        return null;
+    public Map<String, ArrayList<Relation>> query(RelationQuery query) throws Exception {
+    	  String x = query.getX();
+          if(x == null)
+              return null;
+          
+
+          HashMap<String, ArrayList<Relation>> allRelations = new HashMap<>();
+          Set<String> relations_searched = query.getRelations_searched();
+          Set<String> terms_searched = query.getTerm_searched();
+
+          boolean are_relation_filtered = ! (relations_searched == null || relations_searched.isEmpty());
+          boolean in = query.isIn();
+          boolean isOut = query.isOut();
+              
+          if(in){
+        	  
+          }
+          if(isOut) {
+        	  
+          }
+          return allRelations;
     }
 
     @Override
@@ -47,8 +89,22 @@ public class Neo4J_RelationStore implements ReadRelationStore,WriteRelationStore
     }
 
     @Override
-    public void add(Relation relation) {
-
+    public void addRelation(Relation relation) {
+    	
+    	String query = queries.get(relation.getType());
+//    	logger.info(query+" on : "+relation.toString());
+    	
+    	try ( Session session = driver.session() ){
+            session.writeTransaction( new TransactionWork<String>(){   
+            	
+                public String execute( Transaction tx )             {
+                    StatementResult result = tx.run(query,Values.parameters("n1", relation.getX_id(),
+                                                    		 "n2",relation.getY_id(),                                                   		 
+                                                    		 "w",relation.getWeight()));     
+                    return "";
+                }
+            } );
+        }
     }
 
     @Override
@@ -65,6 +121,37 @@ public class Neo4J_RelationStore implements ReadRelationStore,WriteRelationStore
     public void update(Relation oldRelation, Relation newRelation) {
 
     }
+
+
+	@Override
+	public void resetTerms() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void addTerm(int id, String name) throws OutOfMemoryError, SQLException {
+		
+		try ( Session session = driver.session() ){
+            session.writeTransaction( new TransactionWork<String>(){
+              
+                public String execute( Transaction tx )             {
+                    StatementResult result = tx.run( insert_node_query,
+                                                     Values.parameters("name", name,"id",id));     
+                    return "";
+                }
+            } );
+        }
+	}
+
+
+	@Override
+	public boolean addTerm(Collection<Integer> ids, Collection<String> names) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+    
 
 
 }
