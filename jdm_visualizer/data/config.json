@@ -1,7 +1,7 @@
 {
 	"memory":{
-		"serialized_terms_path":"",	
-		"terms_paths":["data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt","data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt"],
+		"serialized_terms_path":"data/all_terms.txt",	
+		"terms_paths":["data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt","data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt"]	,	
 		"relation_types_path":"data/relation_types.txt"
 	},
 
