@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JDM Visual</title>
+    <title>JDMVisual</title>
     
     <!--    Stylesheet Files    -->
     <link rel="stylesheet" href="css/normalize.css" />
@@ -75,6 +75,7 @@
         <input type="text" placeholder="is_a"  name="predicat" />
       </label>
     </div>
+
     <div class="large-4 columns">
       <div class="row collapse">
         <label id="left3">Mot y</label>
@@ -109,9 +110,12 @@
       <div class="wow" id="right1"></div>
       <div class="wow" id="right2"></div>
       <div class="wow" id="right3"></div>
+      <div class="wow" id="ghost" style="display:none"></div>
+      <div class="wow" id="ghost2" style="display:none"></div>
       <p id="desappear">le chat est un animal </p>
       <div id="interro">?</div>
 </form>
+
      
  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> 
 
@@ -230,6 +234,7 @@
 
 
     <!--    Javascript Files    -->
+
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
     <script type="text/javascript" src="js/jquery.js"></script>
     <script type="text/javascript" src="js/touchSwipe.min.js"></script>
@@ -243,15 +248,65 @@
 <script type="text/javascript">
     $(document).ready(function () {
        $("#haha").on("keyup", function (e) {
-          e.preventDefault();
+e.preventDefault();
           var leftside = $("input[type='text']");
           var rightside = $("#rightside .wow");
           for (var i = 0; i < leftside.length; i++) {
              var leftValue = leftside.eq(i).val();
-             var rightFieldId = $("#rightside .wow")[i].id;
+             var rightFieldId = rightside[i].id;
 	     console.log(leftValue);
-	     document.getElementById(rightFieldId).innerHTML = leftValue;
+	
+var text;
+if(i==0) {
+jQuery.get('dico.txt', function(data) {
+var leftside = $("input[type='text']");
+	leftvalue0 = leftside.eq(0).val()
+	var i = data.indexOf(leftside.eq(0).val()+",");
+while(data[i] !== "\n") { 
+    text += data[i];
+	i++;
+}
+var leftvalue;
+text = text.substr(text.length - 3, text.length - 2);
+var labelMen = document.getElementById("ghost");
+labelMen.innerHTML = text;
 
+}); }
+
+if(i==2) {
+jQuery.get('dico.txt', function(data) {
+var leftside = $("input[type='text']");
+	 <!--  console.log(data[data.indexOf('c')]);  -->
+	leftvalue0 = leftside.eq(2).val()
+	var i = data.indexOf(leftside.eq(2).val()+",");
+	console.log(data[i]);
+while(data[i] !== "\n") { 
+    text += data[i];
+	console.log(text);
+	i++;
+}
+var leftvalue;
+text = text.substr(text.length - 3, text.length - 2);
+var labelMen = document.getElementById("ghost2");
+labelMen.innerHTML = text;
+
+}); }
+	<!-- text = text.substr(text.length - 2); -->
+
+		var leftValue = leftside.eq(i).val();
+	if(i==0) {
+
+		var labelMan = document.getElementById("ghost");
+		if(labelMan.innerHTML.includes("ms")) {leftValue = "le "+leftValue;}
+		if(labelMan.innerHTML.includes("fs")) {leftValue = "la "+leftValue; }}
+	if(i==2) {
+
+		var labelMan = document.getElementById("ghost2");
+		if(labelMan.innerHTML.includes("ms")) {leftValue = "un "+leftValue;}
+		if(labelMan.innerHTML.includes("fs")) {leftValue = "une "+leftValue; }}
+		var leftside = $("input[type='text']");
+		console.log("Left : "+leftValue);
+	     document.getElementById(rightFieldId).innerHTML = leftValue;
 	         var labelMen = document.getElementById("desappear");
 		 console.log(labelMen.value);
    		 labelMen.style.display = 'none';
@@ -259,6 +314,10 @@
        });
     });
   </script>
+
+  <script>
+
+</script>
 
   </body>
 </html>
