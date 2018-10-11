@@ -3,7 +3,7 @@ package Store;
 import core.Relation;
 import core.RelationQuery;
 
-
+import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,6 +22,9 @@ import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.TransactionWork;
 import org.neo4j.driver.v1.Values;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
 
 public class Neo4J_RelationStore implements ReadRelationStore,WriteRelationStore{
 
@@ -41,13 +44,15 @@ public class Neo4J_RelationStore implements ReadRelationStore,WriteRelationStore
 
     private PatriciaTrie<String> queries;
     final static Logger logger = Logger.getLogger("Neo4J_RelationStore");
+    
 
     public Neo4J_RelationStore(JSONObject prop, RelationTypeStore relationTypeStore) throws SQLException {
     	
         this.max_size = prop.getInt("max_relation");
         String db_server = prop.getString("url");
         String user = prop.getString("user");
-        String pwd = prop.getString("pwd");       
+        String pwd = prop.getString("pwd");     
+        
         driver = GraphDatabase.driver(db_server, AuthTokens.basic(user,pwd));
         
         queries = new PatriciaTrie<>();        
@@ -91,17 +96,17 @@ public class Neo4J_RelationStore implements ReadRelationStore,WriteRelationStore
     @Override
     public void addRelation(Relation relation) {
     	
+   	
+ 	
     	String query = queries.get(relation.getType());
-//    	logger.info(query+" on : "+relation.toString());
-    	
     	try ( Session session = driver.session() ){
-            session.writeTransaction( new TransactionWork<String>(){   
-            	
-                public String execute( Transaction tx )             {
+            session.writeTransaction( new TransactionWork<Integer>(){   
+          	
+                public Integer execute( Transaction tx )             {
                     StatementResult result = tx.run(query,Values.parameters("n1", relation.getX_id(),
                                                     		 "n2",relation.getY_id(),                                                   		 
                                                     		 "w",relation.getWeight()));     
-                    return "";
+                    return 1;
                 }
             } );
         }
@@ -124,32 +129,9 @@ public class Neo4J_RelationStore implements ReadRelationStore,WriteRelationStore
 
 
 	@Override
-	public void resetTerms() {
-		// TODO Auto-generated method stub
+	public void addRelations(Collection<Relation> relations) {
 		
-	}
-
-
-	@Override
-	public void addTerm(int id, String name) throws OutOfMemoryError, SQLException {
 		
-		try ( Session session = driver.session() ){
-            session.writeTransaction( new TransactionWork<String>(){
-              
-                public String execute( Transaction tx )             {
-                    StatementResult result = tx.run( insert_node_query,
-                                                     Values.parameters("name", name,"id",id));     
-                    return "";
-                }
-            } );
-        }
-	}
-
-
-	@Override
-	public boolean addTerm(Collection<Integer> ids, Collection<String> names) {
-		// TODO Auto-generated method stub
-		return false;
 	}
     
 

@@ -57,9 +57,9 @@ public class MasterStore {
 		JSONObject rootObj =  new JSONObject(stringJSON);
 		
 		JSONObject memoryObj = rootObj.getJSONObject("memory");
-		String serialized_terms = memoryObj.getString("serialized_terms_path");
+		String serialized_terms_path = memoryObj.getString("serialized_terms_path");
 		
-		if(serialized_terms == null || serialized_terms.isEmpty()) {
+		if(serialized_terms_path == null || serialized_terms_path.isEmpty()) {
 			JSONArray terms_paths = memoryObj.getJSONArray("terms_paths");
 			for (int i = 0; i < terms_paths.length(); i++) {
 				String path = terms_paths.getString(i);
@@ -69,7 +69,15 @@ public class MasterStore {
 			}
 		}
 		else {
-			
+			List<String> lines = Files.readAllLines(Paths.get(serialized_terms_path),StandardCharsets.ISO_8859_1);
+			for(String line : lines) {
+				String[] parts = line.split(",");
+				int id = Integer.parseInt(parts[0]);
+				if(parts.length == 2) {
+					termStore.addTerm(id,parts[1]);
+				}	
+			}
+	        logger.info("\tWhole term list insertion[OK]");
 		}
 		
 		String relation_types_path = memoryObj.getString("relation_types_path");
