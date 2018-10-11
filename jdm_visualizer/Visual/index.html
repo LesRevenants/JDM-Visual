@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/normalize.css" />
     <link rel="stylesheet" href="css/foundation.min.css" />
     <link rel="stylesheet" href="css/main.css" />
+<link rel="stylesheet" href="completion/awesomplete.css" /> and <script src="completion/awesomplete.js" async></script>
 <style>
         #main { width: 100%; margin: 0 auto; display: inline-block;}
         #outer { width: 50%; height: auto; display: inline-block; margin: 0 auto;}
@@ -71,8 +72,49 @@
       </label>
     </div>
     <div class="large-4 columns">
-      <label id="left2">Prédicat
-        <input type="text" placeholder="is_a"  name="predicat" />
+      <label id="left1">Prédicat
+      <input type="text" placeholder="est" list="mylist" name="predicat"/>
+<datalist id="mylist">
+	<option>affecte</option>
+	<option>cause</option>
+	<option>déclenche</option>
+	<option>peut entraîner</option>
+	<option>mène à</option>
+	<option>n'affecte que</option>
+	<option>peut produire</option>
+	<option>peut être provoqué par</option>
+	<option>peut provoquer</option>
+	<option>provient de</option>
+	<option>provoque</option>
+	<option>dû à</option>
+	<option>est dû à</option>
+	<option>est causé par</option>
+	<option>peut être causé par</option>
+	<option>est provoqué par</option>
+	<option>a comme parti</option>
+	<option>a</option>
+	<option>composé d'</option>
+	<option>constitué de</option>
+	<option>qui est</option>
+	<option>c'est à dire</option>
+	<option>est aussi</option>
+	<option>est de la famille</option>
+	<option>est</option>
+	<option>est un ensemble de</option>
+	<option>est un genre de</option>
+	<option>est une forme de</option>
+	<option>est une sorte de</option>
+	<option>est également</option>
+	<option>qui est</option>
+	<option>sont</option>
+	<option>éventuellement aussi appelé</option>
+	<option>compose</option>
+	<option>constitue</option>
+	<option>est partie de</option>
+	<option>est une partie de</option>
+	<option>forme</option>
+	<option>possède</option>
+</datalist>
       </label>
     </div>
 
@@ -317,6 +359,28 @@ labelMen.innerHTML = text;
 
   <script>
 
+function check(field) {
+var base= ['log', 'login', 'logon', 'logout', 'logoff', 'logged'];
+  var name = field.value;
+  var l = name.length;
+  var last = name;
+  function AC_indexOf()
+  {
+    var ctr=0;
+    for(var i = 0; i < base.length; i++)
+    {
+      var next = base[i];
+      if(name==next) return 1;
+      if(name==next.substr(0, l)) { last=next; ctr++;}
+    }
+    return ctr;
+  }
+  var ctr = AC_indexOf();
+  if(ctr != 1) return;
+  field.value = last;
+  var content = last + " trouvé.";
+  document.getElementById("storage").innerHTML=content;
+}
 </script>
 
   </body>
