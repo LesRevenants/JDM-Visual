@@ -131,9 +131,61 @@
 
 }
 
+.tooltip2 {
+    position: absolute;
+    background-color: white;
+    bottom: 96px;
+    left: 72px;
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    padding:0px;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: white;
+    bottom: 70px;
+    left: 72px;
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    padding:0px;
+}
+
+.multiple {
+
+font-size: 0.6em;
+position : relative;
+display: inline-block;
+    bottom: 20px;
 
 
+}
 
+.tooltiptext {
+    visibility: hidden;
+    width: 250px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -60px;
+    
+    /* Fade in tooltip - takes 1 second to go from 0% to 100% opac: */
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
 
 
 /*    Reset Default Foundation Styling    */
