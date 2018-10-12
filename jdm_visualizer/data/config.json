@@ -13,10 +13,7 @@
 		"stores": {
 			"Neo4j":{
 				"max_relation":10000000,
-				"update_terms":true,
-				"url":"bolt://localhost:7687",
-				"user":"neo4j",
-				"pwd":"vLGGTq5eiHFZwn"
+				"url":"/auto_home/rcolin/Documents/M2/HMIN340/neo4j-community-3.4.7/data/databases/graph.db"			
 			}
 		}
 	}

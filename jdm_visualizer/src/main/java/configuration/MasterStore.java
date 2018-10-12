@@ -87,7 +87,7 @@ public class MasterStore {
 		JSONObject persistentObj = rootObj.getJSONObject("persistent");
 		JSONObject storeObj = persistentObj.getJSONObject("stores");
 		JSONObject neo4jObj = storeObj.getJSONObject("Neo4j");
-		persistentStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore);
+		persistentStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);
 		
         logger.info("TermStore Building [OK]");
 

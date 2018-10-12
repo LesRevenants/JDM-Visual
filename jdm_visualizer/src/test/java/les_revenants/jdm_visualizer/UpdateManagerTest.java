@@ -5,7 +5,7 @@ import configuration.MasterStore;
 import core.Relation;
 import core.RelationQuery;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,8 +17,10 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+
 
 
 public class UpdateManagerTest {
@@ -29,8 +31,8 @@ public class UpdateManagerTest {
 
     public static List<RelationQuery> queries;
 
-    @BeforeAll
-    static void setUp() throws IOException, NumberFormatException, SQLException{
+    @BeforeClass
+    public static void setUp() throws IOException, NumberFormatException, SQLException{
     	
 //        prop = new Properties();
 //        prop.put(MasterStore.ENTRIES_KEY,"data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt");
