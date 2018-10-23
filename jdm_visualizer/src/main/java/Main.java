@@ -1,12 +1,10 @@
-package main;
 
-	import java.io.BufferedReader;
-	import java.net.*;
-	import java.io.*;
-	import java.nio.charset.StandardCharsets;
-	import java.util.*;
-	import org.apache.commons.io.Charsets;
-	import org.apache.commons.io.FileUtils;
+
+import java.io.BufferedReader;
+import java.net.*;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 public class Main {
 
@@ -16,10 +14,9 @@ public class Main {
     private static String command;
 	private static String responseStr ;
 
-	public static String main() {
+	public static void main(String[] args) {
 
-		connectJava2Php(Integer.parseInt(args[2]),properties);
-
+		connectJava2Php(Integer.parseInt(args[2]),null);
 
 	}
 
@@ -39,10 +36,10 @@ public class Main {
 		                 if(article.equals("Ok")) 
 		                 {
 			                 int max_size=1000;
-			                 String content = FileUtils.readFileToString(new File("././Visual/json/query.json"),StandardCharsets.UTF_8);
-			                 System.out.println(content);
-			                 Relation[] relations = dostuff();
-			                 bw.write(relations);
+//			                 String content = FileUtils.readFileToString(new File("././Visual/json/query.json"),StandardCharsets.UTF_8);
+//			                 System.out.println(content);
+//			                 Relation[] relations = dostuff();
+//			                 bw.write(relations);
 			                 bw.close();
 			                 br.close();
 			                 sock.close(); 

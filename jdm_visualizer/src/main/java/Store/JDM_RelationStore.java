@@ -104,10 +104,10 @@ public class JDM_RelationStore {
     		HashMap<Integer, ArrayList<Relation>> allRelations) {
     	
 		if(in){
-            query(terms_searched,mot.getID(),true,mot.getRelations_entrantes(),allRelations);
+            query(terms_searched,mot.getID(),false,mot.getRelations_entrantes(),allRelations);
         }
         if(out){
-            query(terms_searched,mot.getID(),false,mot.getRelations_sortantes(),allRelations);
+            query(terms_searched,mot.getID(),true,mot.getRelations_sortantes(),allRelations);
         }
     }
 

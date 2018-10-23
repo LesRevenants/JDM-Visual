@@ -3,6 +3,8 @@ package configuration;
 import Store.*;
 import core.Relation;
 import core.RelationQuery;
+import core.RelationQueryFactory;
+import scala.collection.mutable.StringBuilder;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,14 +12,16 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class MasterStore {
 
-
-   
+  
     
     /**
      * The JDM network entry point
@@ -43,6 +47,8 @@ public class MasterStore {
       
  
     final static Logger logger = Logger.getLogger("MasterStore");
+    
+    private RelationQueryFactory queryFactory;
     
     
     /**
@@ -77,6 +83,7 @@ public class MasterStore {
         logger.info("JDM store building [OK]");
         
         termWithRelationsInDB = new HashSet<>();   	
+        queryFactory  = new RelationQueryFactory(termStore, relationTypeStore);
        
     }
     
@@ -108,6 +115,65 @@ public class MasterStore {
     	applyUpdateStrategy(results);
 		return results;   	
     }
+    
+    public String query(String queryAsJson) throws Exception{
+    	StringBuilder sb = new StringBuilder();
+    	
+    	byte[] encodedjSON = queryAsJson.getBytes();
+    	String stringJSON = new String(encodedjSON);
+		JSONObject rootObj =  new JSONObject(stringJSON);
+		
+		String x = rootObj.getString("motx");
+		JSONArray predicatesArray = rootObj.getJSONArray("predicat");
+		JSONArray yTermsArray = rootObj.getJSONArray("moty");
+		Boolean isIn = Boolean.parseBoolean(rootObj.getString("input"));
+		Boolean isOut= Boolean.parseBoolean(rootObj.getString("output"));
+		String format = rootObj.getString("format");
+
+		List<String> relationsSearched = new ArrayList<>(predicatesArray.length());
+		for(int i=0;i<predicatesArray.length();i++){
+			relationsSearched.add(predicatesArray.getString(i));
+		}
+		List<String> yTerms = new ArrayList<>(yTermsArray.length());
+		for (int i = 0; i < yTermsArray.length(); i++) {
+			yTerms.add(yTermsArray.getString(i));
+		}
+		
+		RelationQuery query = queryFactory.create(x,yTerms,isIn,isOut,relationsSearched);
+		Map<Integer, ArrayList<Relation>> queryResults = query(query);
+    	return buildJsonContent(queryResults, format);
+    }
+    
+    private String buildJsonContent(Map<Integer, ArrayList<Relation>> queryResults,String format){
+    	JSONObject jsonObj = new JSONObject();
+    	
+    	switch(format) {
+    		case "grouped" : {
+    			for(Integer r_id : queryResults.keySet()){
+    				String relationName = relationTypeStore.getName(r_id);
+    			    JSONArray allRelations = new JSONArray();
+    			    
+    				for(Relation relation: queryResults.get(r_id)){
+    					JSONArray relationArray = new JSONArray();
+    					String x_name = termStore.getTermName((int) relation.getX_id());
+    					String y_name = termStore.getTermName((int) relation.getY_id());
+    					relationArray.put(x_name);
+    					relationArray.put(y_name);
+    					relationArray.put(relation.getWeight());
+    					allRelations.put(relationArray);
+    				}
+    				jsonObj.put(relationName, allRelations);
+    			}
+    			break;
+    		}
+    		default : {
+    			break;
+    		}
+    	}
+    	return jsonObj.toString();
+    }
+    
+    
     
     private void applyUpdateStrategy(Map<Integer, ArrayList<Relation>> results) {
     	

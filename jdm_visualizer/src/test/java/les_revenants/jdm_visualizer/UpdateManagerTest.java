@@ -27,6 +27,7 @@ public class UpdateManagerTest {
     public static Properties prop;
     public static MasterStore masterStore;
     public static TermStore termStore;
+    public static RelationTypeStore relationTypeStore;
     public static List<String> entries,mweEntries,allEntries;
 
     public static List<RelationQuery> queries,queries2;
@@ -44,16 +45,17 @@ public class UpdateManagerTest {
         System.out.println("\nSetUp[START]");
         masterStore = new MasterStore("data/config.json");
         termStore = masterStore.getTermStore();
+        relationTypeStore = masterStore.getRelationTypeStore();
         System.out.println("SetUp [OK] in : "+Duration.between(t1,Instant.now()).toMillis() + "ms");
         
 
         RelationQueryFactory queryFactory = new RelationQueryFactory(termStore, masterStore.getRelationTypeStore());
         
         queries.add(queryFactory.create("requin"));
-        queries.add(queryFactory.create("chat",Arrays.asList("felin","souris","nom"),Arrays.asList("r_isa","r_pos")));
-        queries.add(queryFactory.create("chat",Arrays.asList("felin","souris","nom"),null));
+        queries.add(queryFactory.create("chat",Arrays.asList("félin","souris","nom"),Arrays.asList("r_isa","r_pos")));
+        queries.add(queryFactory.create("chat",Arrays.asList("félin","souris","nom"),null));
         queries.add(queryFactory.create("ours"));
-        queries.add(queryFactory.create("ours",Arrays.asList("felin","miel","animal","brun","griffe"),Arrays.asList("r_isa","r_associated","r_carac","r_has_part")));
+        queries.add(queryFactory.create("ours",Arrays.asList("félin","miel","animal","brun","griffe"),Arrays.asList("r_isa","r_associated","r_carac","r_has_part")));
 
         String[] words = { 
         		"chien","tortue","médicament",
@@ -119,12 +121,20 @@ public class UpdateManagerTest {
    public void testQueries() throws Exception {
 //	   testRunQueries(queries,false);
 //	   testRunQueries(queries,true);
-       testRunQueries(queries2,true);
+//       testRunQueries(queries2,true);
    }
   
     
-   
-
+   @Test
+   public void testJSON() throws Exception{
+	    System.out.println("TEST_JSON");
+		RelationQuery q1 = queries.get(1);
+		String q1JSON = q1.asJSON(termStore, relationTypeStore,"grouped");
+		System.out.println(q1JSON);	
+		
+		String q1ResultsJSON = masterStore.query(q1JSON);
+		System.out.println(q1ResultsJSON);
+   }
 
     private int nbResult(Map<Integer,ArrayList<Relation>> results){
         Integer i = 0;
