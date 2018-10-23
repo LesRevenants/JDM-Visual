@@ -4,29 +4,29 @@ import java.util.Set;
 
 public class RelationQuery {
 
-    private String x;
+    private int x;
 
-    private Set<String> term_searched;
+    private Set<Long> term_searched;
 
     private boolean in,out;
 
-    public Set<String> relations_searched;
+    public Set<Integer> relations_searched;
 
 
-    public RelationQuery(String x,Set<String> term_searched, boolean in, boolean out, Set<String> relations_searched) {
+    public RelationQuery(int x,Set<Long> term_searched, boolean in, boolean out, Set<Integer> relations_searched) {
         this.x = x;
         this.term_searched = term_searched;
         this.in = in;
         this.out = out;
         this.relations_searched = relations_searched;
     }
+    
 
-
-    public String getX() {
+    public int getX() {
         return x;
     }
 
-    public Set<String> getTerm_searched() {
+    public Set<Long> getTerm_searched() {
         return term_searched;
     }
 
@@ -38,7 +38,7 @@ public class RelationQuery {
         return out;
     }
 
-    public Set<String> getRelations_searched() {
+    public Set<Integer> getRelations_searched() {
         return relations_searched;
     }
 

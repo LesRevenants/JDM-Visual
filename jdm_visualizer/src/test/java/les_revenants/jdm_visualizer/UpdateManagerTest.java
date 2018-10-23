@@ -4,8 +4,12 @@ import Store.*;
 import configuration.MasterStore;
 import core.Relation;
 import core.RelationQuery;
+<<<<<<< HEAD
 
 import static org.junit.Assert.*;
+=======
+import core.RelationQueryFactory;
+>>>>>>> Deleting some useless abstract class
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -15,18 +19,21 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> Deleting some useless abstract class
 
 
 public class UpdateManagerTest {
 
     public static Properties prop;
     public static MasterStore masterStore;
+<<<<<<< HEAD
     public static List<String> entries,mweEntries;
 
     public static List<RelationQuery> queries;
@@ -54,153 +61,120 @@ public class UpdateManagerTest {
         queries.add(new RelationQuery("marmotte",null,true,true,null));
         queries.add(new RelationQuery("ours",new HashSet<String>(Arrays.asList("felin","souris","nom","miel")),true,true,new HashSet<String>(Arrays.asList("r_isa","r_associated","r_has_part"))));
         queries.add(new RelationQuery("chat",new HashSet<String>(Arrays.asList("felin","souris","nom")),true,true,new HashSet<String>(Arrays.asList("r_isa","r_pos"))));
+=======
+    public static TermStore termStore;
+    public static List<String> entries,mweEntries,allEntries;
+>>>>>>> Deleting some useless abstract class
 
+    public static List<RelationQuery> queries,queries2;
+    
+    @BeforeClass
+    public static void setUp() throws IOException, NumberFormatException, SQLException{
+    	queries=new ArrayList<>();
+        queries2=new ArrayList<>();     
         entries = Files.readAllLines(Paths.get("data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt"),StandardCharsets.ISO_8859_1);
         mweEntries = Files.readAllLines(Paths.get("data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt"),StandardCharsets.ISO_8859_1);
+        allEntries = Files.readAllLines(Paths.get("data/terms.txt"),StandardCharsets.UTF_8);
+
 
         Instant t1 = Instant.now();
         System.out.println("\nSetUp[START]");
         masterStore = new MasterStore("data/config.json");
+        termStore = masterStore.getTermStore();
         System.out.println("SetUp [OK] in : "+Duration.between(t1,Instant.now()).toMillis() + "ms");
-    }
-
-
-    @Test
-    public void testCachedStoreInsertion()  throws IOException{
-        ReadTermStore store = masterStore.getTermStore();
-        Map<String,Integer> termIndex = store.getTermIndex();
-        Collection<String> terms = store.getTermsName();
-        Collection<String> mweTerms = store.getMweTermsURI();
-        assert(termIndex.size() == terms.size() + mweTerms.size());
-        assert(store.getTermsLength() == terms.size());
-        assert(store.getMweTermsLentgh() == mweTerms.size());
-        assert(store.length() == termIndex.size());
-        System.out.println("\tlength="+store.length()+", size="+store.size());
-        System.out.println("\tTerms.length()="+store.getTermsLength()+", MweTerms.length()="+store.getMweTermsLentgh());
-        System.out.println("\tTerms.size()="+store.getTermsSize()+", MweTerms.size()="+store.getMweTermsSize());
-    }
-
-    @Test
-    public void testSearchTerms() throws IOException {
-        MemoryTermStore store = masterStore.getTermStore();
-
-
-        Instant t1 = Instant.now();
-        System.out.println("\nTerm search [START]");
-
-        AtomicInteger nb_searched_word = new AtomicInteger(0);
-        AtomicInteger totalDicoSize= new AtomicInteger(0);
-        assertEncodedList(store,entries,nb_searched_word,totalDicoSize);
-        assertEncodedList(store,mweEntries,nb_searched_word,totalDicoSize);
-
-        System.out.println("Search into store[OK] in : "+Duration.between(t1,Instant.now()).toMillis() + "ms");
-        System.out.println("\tword_nb : "+nb_searched_word+", total_size : "+totalDicoSize);
-    }
-
-    @Test
-    public void testRunQueries() throws Exception{
-        System.out.println("\nQueries run[START]\n");
-        ReadRelationStore relationStore = masterStore.getInputStore();
-        RelationTypeStore relationTypeStore = masterStore.getRelationTypeStore();
-
-        Instant t1 = Instant.now();
-
-        for(RelationQuery query : queries){
-            Instant t2 = Instant.now();
-            Map<String,ArrayList<Relation>> results = relationStore.query(query);
-            long time = Duration.between(t2,Instant.now()).toMillis();
-            System.out.println(query.toString()+" : ");
-            System.out.println("\t"+nbResult(results)+" relations found, time : "+time+ "ms");
-        }
-        System.out.println("\nQueries run[OK] in : "+Duration.between(t1,Instant.now()).toMillis()+ "ms");
         
-        for(RelationQuery query : queries){
-        	if(query.getRelations_searched() != null) {
-        		for(String r_name : query.getRelations_searched()) {
-            		assertNotNull(relationTypeStore.getId(r_name));
-            	}
-        	}
-        	
-        }
-    }
-    
 
-    
-    @Test
-    public void testRelationTypeStore() {
-    	RelationTypeStore store = masterStore.getRelationTypeStore();
-    	Collection<Integer> ids = store.getIds();
-    	Collection<String> names = store.getNames();
-    	assert(ids.size() == 143);
-    	assert(names.size() == ids.size());
-       	ArrayList<String> namesList = new ArrayList<>(names);
-       	for (int i = 0; i < namesList.size()-1; i++) {
-			assert(store.getId(namesList.get(i)) < store.getId(namesList.get(i+1)));
-		}
-    }
-    
-    @Test
-    public void testNeo4_Setup() throws Exception {
-    	
-    	ReadRelationStore inputStore = masterStore.getInputStore();
-    	WriteRelationStore writeStore = masterStore.getPersistentStore();
-    	
-        Instant t1 = Instant.now();
-        System.out.println("Neo4J insertion [START]");
+        RelationQueryFactory queryFactory = new RelationQueryFactory(termStore, masterStore.getRelationTypeStore());
         
-    	for(RelationQuery query : queries){
-    		 Instant t2 = Instant.now();
-    		 Map<String,ArrayList<Relation>> results = inputStore.query(query);
-    		 results.forEach((k,v)-> {
-    			 v.forEach(relation -> writeStore.addRelation(relation));
-    		 });
-    		 long time = Duration.between(t2,Instant.now()).toMillis();
-    		 System.out.println("\t"+nbResult(results)+" relations inserted, time : "+time+ "ms");
+        queries.add(queryFactory.create("requin"));
+        queries.add(queryFactory.create("chat",Arrays.asList("felin","souris","nom"),Arrays.asList("r_isa","r_pos")));
+        queries.add(queryFactory.create("chat",Arrays.asList("felin","souris","nom"),null));
+        queries.add(queryFactory.create("ours"));
+        queries.add(queryFactory.create("ours",Arrays.asList("felin","miel","animal","brun","griffe"),Arrays.asList("r_isa","r_associated","r_carac","r_has_part")));
+
+        String[] words = { 
+        		"chien","tortue","médicament",
+        		"voiture","avocat","fichier","femme","alpinisme",
+        		"sérac","piano","Everest","vin","palais","poumon"};
+        for(String word : words) {
+        	queries2.add(queryFactory.create(word));
+        }
+       
+    }
+
+
+    private void testRunQueries(Collection<RelationQuery> workload,boolean batch_insertion) throws Exception{
+    	JDM_RelationStore inputStore = masterStore.getInputStore();
+    	Neo4J_RelationStore writeStore = masterStore.getPersistentStore();
+    	writeStore.reset();
+    	
+        Instant t1 = Instant.now(), t2;
+        System.out.println("Run queries [START]");
+        
+        long total_jdm_query_time = 0,
+        	 total_neo4j_insert_time = 0;
+        long total_insertion_nb = 0;
+        
+    	for(RelationQuery query : workload){
+    		
+    		 t1 = Instant.now();
+    		 Map<Integer,ArrayList<Relation>> results = inputStore.query(query);
+    		 long query_time = Duration.between(t1,Instant.now()).toMillis();
+    		 total_jdm_query_time += query_time;
+    		
+    		 t2 = Instant.now();
+    		 if(results != null) {
+    			 for(Integer r_type : results.keySet()) {
+    				 total_insertion_nb += results.get(r_type).size();
+    				 if(batch_insertion) {
+    					 writeStore.addRelations(results.get(r_type));
+    				 }
+    				 else {  					
+    					results.get(r_type).forEach(relation -> writeStore.addRelation(relation));
+    	        	} 
+    			}
+    			
+    		 }
+    		 long insert_time = Duration.between(t2,Instant.now()).toMillis();
+    		 total_neo4j_insert_time += insert_time;
+    		 
+    		 System.out.println("\n"+query.toString()+" : ");
+             System.out.println("\t"+nbResult(results)+" relations found, query_time : "+query_time+ "ms "
+             										+",insert time : "+insert_time+ "ms");   		    		
     	}
-        System.out.println("\n\"Neo4Jinsertion  [OK] in : "+Duration.between(t1,Instant.now()).toMillis()+ "ms");
-
+    	if(batch_insertion) {
+    		t1 = Instant.now();
+    		writeStore.flush();
+    		total_neo4j_insert_time += Duration.between(t1,Instant.now()).toMillis();
+    	}
     	
-//    	List<String> lines = new ArrayList<>();
-//    	lines.add("id,name");
-//    	
-//    	for(String term : terms ) {
-//    		lines.add(termStore.getTermId(term)+","+term);
-//    	}
-//    	Files.write(Paths.get("load.csv"),lines);
-//    	System.out.println("terms writed into CSV [OK]");
-     	System.out.println("TestNeo4_Setup[OK]");
-
+    	System.out.println("\nJDM Querying [OK] in : "+total_jdm_query_time+ "ms");
+        System.out.println("Neo4J : "+total_insertion_nb+" insertion  [OK] in : "+total_neo4j_insert_time+ "ms");
     }
+    
+   @Test
+   public void testQueries() throws Exception {
+//	   testRunQueries(queries,false);
+//	   testRunQueries(queries,true);
+       testRunQueries(queries2,true);
+   }
+  
+    
+   
 
 
-
-    private int nbResult(Map<String,ArrayList<Relation>> results){
+    private int nbResult(Map<Integer,ArrayList<Relation>> results){
         Integer i = 0;
         if(results == null)
             return i;
-        for(String key : results.keySet()){
+        for(Integer key : results.keySet()){
             i +=results.get(key).size();
         }
         return i;
     }
 
 
-    private void assertEncodedList(ReadTermStore store, Collection<String> entries, AtomicInteger i, AtomicInteger totalDicoSize){
-        for (String line : entries) {
-            if (line != null && !line.isEmpty()) {
-                String[] parts = line.split(";");
-                if (parts.length == 2) {
-                    Integer id = Integer.parseInt(parts[0]);
-                    String name = parts[1];
-//                    assertNotNull(store.getTermId(name));
-                    store.getTermName(id);
-                    store.getMweTermName(id);
-                    i.incrementAndGet();
-                    totalDicoSize.getAndAdd(name.length());
-                }
-            }
-        }
-    }
+  
 
 
 }

@@ -3,13 +3,13 @@ package core;
 public class Relation {
 	
 	private int id;
-	private String type;
-	private String x_id;
-	private String y_id;
-	private int weight;
+	private int type;
+	private long x_id;
+	private long y_id;
+	private double weight;
 	
 	
-	public Relation(int id, String type, String x_id, String y_id, int weight) {
+	public Relation(int id, int type, long x_id, long y_id, double weight) {
 		super();
 		this.id = id;
 		this.type = type;
@@ -21,16 +21,16 @@ public class Relation {
 	public int getId() {
 		return id;
 	}
-	public String getType() {
+	public int getType() {
 		return type;
 	}
-	public String getX_id() {
+	public long getX_id() {
 		return x_id;
 	}
-	public String getY_id() {
+	public long getY_id() {
 		return y_id;
 	}
-	public int getWeight() {
+	public double getWeight() {
 		return weight;
 	}
 
