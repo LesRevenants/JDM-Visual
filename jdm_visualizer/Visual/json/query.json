@@ -1,10 +1,10 @@
 
-	[
+	{
 		
-			"motx":"DF",
-			"predicat":"GF",
-			"moty":"GH",
-			"input":"",
-			"output":"on"
+			"motx":"chat",
+			"predicat":["est"],
+			"moty":"["chien"],
+			"input":"false",
+			"output":"true"
 
-	]
+	}

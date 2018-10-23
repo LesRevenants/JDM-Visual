@@ -1,25 +1,34 @@
 <?php
 
+error_reporting( E_ALL );
+ini_set('display_errors',1);
+
 session_start();
-$content = "\n\t[\n\t\t";
+echo "test".$_POST['output']."test";
+echo "La valeur de Input est : ".$_POST['input'];
+echo "La valeur de Output est : ".$_POST['output'];
+if($_POST['output'] == "on") $_POST['output'] = "true";
+else { $_POST['output'] = "false"; }
+if($_POST['input'] == "on") $_POST['input'] = "true";
+else { $_POST['input'] = "false"; }
+$content = "\n\t{\n\t\t";
 	$content .= "\n\t\t\t".'"motx":"';
 	$content .= $_POST["motx"] . '",';
-	$content .= "\n\t\t\t"."\"predicat\":\"";
-	$content .= $_POST["predicat"] . '",';
+	$content .= "\n\t\t\t"."\"predicat\":";
+	$content .= "[\"" . $_POST["predicat"] . '"],';
 	$content .= "\n\t\t\t"."\"moty\":\"";
-	$content .= $_POST['moty'] . '",';
+	$content .= "[\"" . $_POST['moty'] . '"],';
 	$content .= "\n\t\t\t"."\"input\":\"";
 	$content .= $_POST['input'] . '",';
 	$content .= "\n\t\t\t"."\"output\":\"";
-	$content .= $_POST['output'] . '"'. "\n\n\t]";
-$json = fopen('./json/query.json', 'w+');
-$js = fopen('json/query.json', 'c+');
-fwrite($json, $content);
+	$content .= $_POST['output'] . '"'. "\n\n\t}";
+echo $content;
+$js = fopen("json/query.json", "w+") or die("can't open file");
 fwrite($js, $content);
-fclose($json);
 fclose($js);
-try {
+/*try {
  $out = phpClient($arg);   //exec("java -jar ready.jar {$arg}", $output);
+ echo $out;
 } catch (Exception $e) { echo "yolo"; }
 $outpute = explode("@", $out);
 $output = explode("\n", $outpute[0]);
@@ -40,6 +49,6 @@ socket_write($sock, $text . "\n", strlen($text) + 1) //Writing the text to the s
        or die("error: failed to write to socket\n");
 $reply = socket_read($sock, 100000) //Reading the reply from socket
         or die("error: failed to read from socket\n");
-  return $reply; }
+  return $reply; }*/
 
 ?>
