@@ -1,0 +1,21 @@
+
+extract relations names and ids : 
+	cat relation_types.html  | grep '<td style="text-align:center;" info="rel_id"' | cut -d '>' -f 2,3 > relation_ids.txt
+	cat relation_types.html  | grep '<td style="text-align:center;" info="rel_name"' | cut -d '>' -f 2,3 > relation_names.txt
+
+replace 
+	"-" : "_"
+	">" : "_"
+
+set lowercase to uppercase : 
+
+	sublime_text : 
+		Keypress            Command
+		Ctrl + K, Ctrl + U  Transform to Uppercase
+		Ctrl + K, Ctrl + L  Transform to Lowercase	
+	
+add "," to the end of each line (needed for enum)
+    sublime_text :
+		Select all the lines you want to prefix or suffix
+    	Goto menu Selection -> Split into Lines (Cmd/Ctrl + Shift + L)
+

@@ -1,0 +1,11 @@
+
+sources : {
+	https://neo4j.com/developer/guide-performance-tuning/
+}
+
+commands : {
+	"PageCache Sizing" : {	
+		"db_files_sum" : "ls -l *.db | du -ch | tail -1 | cut -f 1"
+		"caching_size:" "db_files_sum * 1.2"
+	}
+}
