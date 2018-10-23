@@ -69,11 +69,7 @@ public class MasterStore {
 		JSONObject persistentObj = rootObj.getJSONObject("persistent");
 		JSONObject storeObj = persistentObj.getJSONObject("stores");
 		JSONObject neo4jObj = storeObj.getJSONObject("Neo4j");
-<<<<<<< HEAD
-		persistentStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);
-=======
->>>>>>> Deleting some useless abstract class
-		
+
 		persistentStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
         logger.info("Neo4J store building [OK]");		
             

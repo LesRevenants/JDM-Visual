@@ -4,12 +4,11 @@ import Store.*;
 import configuration.MasterStore;
 import core.Relation;
 import core.RelationQuery;
-<<<<<<< HEAD
+
 
 import static org.junit.Assert.*;
-=======
 import core.RelationQueryFactory;
->>>>>>> Deleting some useless abstract class
+
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -22,49 +21,13 @@ import java.util.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-<<<<<<< HEAD
-
-
-=======
->>>>>>> Deleting some useless abstract class
-
 
 public class UpdateManagerTest {
 
     public static Properties prop;
     public static MasterStore masterStore;
-<<<<<<< HEAD
-    public static List<String> entries,mweEntries;
-
-    public static List<RelationQuery> queries;
-
-    @BeforeClass
-    public static void setUp() throws IOException, NumberFormatException, SQLException{
-    	
-//        prop = new Properties();
-//        prop.put(MasterStore.ENTRIES_KEY,"data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt");
-//        prop.put(MasterStore.IS_UPDATE_ENTRIES_KEY,false);
-//        prop.put(MasterStore.MWE_ENTRIES_KEY,"data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt");
-//        prop.put(MasterStore.RELATION_TYPES_ENTRIES_KEY,"data/relations.txt");
-//        prop.put(MasterStore.IS_UPDATE_MWE_ENTRIES_KEY,false);
-//        prop.put(MasterStore.MAX_RELATION_IN_DB_KEY,""+1000000);
-//        prop.put(Neo4J_RelationStore.USER_KEY,"neo4j");
-//        prop.put(Neo4J_RelationStore.PASSWORD_KEY,"vLGGTq5eiHFZwn");
-//        prop.put(Neo4J_RelationStore.SERVER_URI_KEY,"bolt://localhost:7687");
-
-        queries=new ArrayList<>();
-        queries.add(new RelationQuery("requin",null,true,true,null));
-        queries.add(new RelationQuery("chat",new HashSet<String>(Arrays.asList("felin","souris","nom")),true,true,new HashSet<String>(Arrays.asList("r_isa","r_pos"))));
-        queries.add(new RelationQuery("chat",new HashSet<String>(Arrays.asList("felin","souris")),true,true,null));
-        queries.add(new RelationQuery("chat",null,true,true,new HashSet<String>(Arrays.asList("r_isa","r_pos"))));
-        queries.add(new RelationQuery("ours",null,true,true,null));
-        queries.add(new RelationQuery("marmotte",null,true,true,null));
-        queries.add(new RelationQuery("ours",new HashSet<String>(Arrays.asList("felin","souris","nom","miel")),true,true,new HashSet<String>(Arrays.asList("r_isa","r_associated","r_has_part"))));
-        queries.add(new RelationQuery("chat",new HashSet<String>(Arrays.asList("felin","souris","nom")),true,true,new HashSet<String>(Arrays.asList("r_isa","r_pos"))));
-=======
     public static TermStore termStore;
     public static List<String> entries,mweEntries,allEntries;
->>>>>>> Deleting some useless abstract class
 
     public static List<RelationQuery> queries,queries2;
     

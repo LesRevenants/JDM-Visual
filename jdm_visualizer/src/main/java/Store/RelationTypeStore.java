@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.trie.PatriciaTrie;
-import org.apache.lucene.queryparser.classic.ParseException;
 
 public class RelationTypeStore {
 	

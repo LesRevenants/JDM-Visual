@@ -14,88 +14,47 @@ import java.util.logging.Logger;
 
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.json.JSONObject;
-<<<<<<< HEAD
-//import org.neo4j.driver.v1.AuthTokens;
-//import org.neo4j.driver.v1.Driver;
-//import org.neo4j.driver.v1.GraphDatabase;
-//import org.neo4j.driver.v1.Session;
-//import org.neo4j.driver.v1.StatementResult;
-//import org.neo4j.driver.v1.Transaction;
-//import org.neo4j.driver.v1.TransactionWork;
-//import org.neo4j.driver.v1.Values;
-=======
->>>>>>> Deleting some useless abstract class
+
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-<<<<<<< HEAD
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import Store.Neo4J_Relationship.JDM_Relation_Type;
-=======
+
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
->>>>>>> Deleting some useless abstract class
+
 
 public class Neo4J_RelationStore {
 
+//  public static final String create_index_query = "CREATE INDEX ON :Term(id)"    
+//  public static final String insert_node_query = "CREATE (t:Term {name:$name, id:$id } )";
+//  
+//  public static final String insert_relation_query_p1 = 
+//  		"MATCH (t1:Term {name:$n1}) MATCH (t2:Term {name:$n2}) CREATE (t1)-[:`"
+//  		,insert_relation_query_p2 = "` {weight:$w}]-> (t2)";
+  
+//	"MATCH (t1:Term {id:$id}) MATCH (t2:Term {id:$id2}) CREATE (t1)-[:$rid {weight:$w}]-> (t2)";
 
 	/**
 	 * The max number of relation into DB
 	 */
     private int max_size;
-<<<<<<< HEAD
+
     private GraphDatabaseService graphDb;
-    private MemoryTermStore termStore;
-=======
-    
+
+
     /**
      * The main entry point to Neo4j graph management
      */
     private GraphDatabaseService graph;
     private Label termLabel = Label.label("Term");
     
-//    public static final String create_index_query = "CREATE INDEX ON :Term(id)"
->>>>>>> Deleting some useless abstract class
-    
-//    public static final String insert_node_query = "CREATE (t:Term {name:$name, id:$id } )";
-//    
-//    public static final String insert_relation_query_p1 = 
-//    		"MATCH (t1:Term {name:$n1}) MATCH (t2:Term {name:$n2}) CREATE (t1)-[:`"
-//    		,insert_relation_query_p2 = "` {weight:$w}]-> (t2)";
-    
-//	"MATCH (t1:Term {id:$id}) MATCH (t2:Term {id:$id2}) CREATE (t1)-[:$rid {weight:$w}]-> (t2)";
-<<<<<<< HEAD
-
-    private PatriciaTrie<Neo4J_Relationship.JDM_Relation_Type> jdm_relation_types;
-    final static Logger logger = Logger.getLogger("Neo4J_RelationStore");
-    
-
-    public Neo4J_RelationStore(JSONObject prop, RelationTypeStore relationTypeStore, MemoryTermStore termStore) throws SQLException {
-    	this.termStore = termStore;
-        this.max_size = prop.getInt("max_relation");
-       
-        String dbPath = prop.getString("url");
-        graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(new File(dbPath) );
-        logger.info("Neo4J database access [OK]");
-        
-        jdm_relation_types = new PatriciaTrie<>();        
-        for(String r_name : relationTypeStore.getNames()){
-        	JDM_Relation_Type label = JDM_Relation_Type.valueOf(r_name);
-        	if(label != null){
-        		jdm_relation_types.put(r_name, label);
-        	}
-        }
-=======
-    
     
     public static final String delete_all_relationship = " MATCH ()-[r]->() delete r";
-
- 
    
     /**
      * Trie which associate a NEO4J_RELATION_LABEL to his corresponding name as string
@@ -148,7 +107,6 @@ public class Neo4J_RelationStore {
         this.termStore = termStore;
         this.relationTypeStore = relationTypeStore;
         relationBuffer = new ArrayList<>(MAX_BATCH_SIZE);
->>>>>>> Deleting some useless abstract class
     }
     
 
@@ -181,25 +139,6 @@ public class Neo4J_RelationStore {
     public int getMax_size() {
         return max_size;
     }
-
-<<<<<<< HEAD
-    @Override
-    public void addRelation(Relation relation) {
-//    	
-//    	int t1_id = termStore.getTermId(relation.getX_id());
-//    	int t2_id = termStore.getTermId(relation.getY_id());
-    	
-    	Label termLabel = Label.label( "Term" );
-
-    	try ( Transaction tx = graphDb.beginTx() )   {		
-    		
-    		Node t1 = graphDb.findNode(termLabel,"name",relation.getX_id());
-    		Node t2 = graphDb.findNode(termLabel,"name",relation.getY_id());
-    	    JDM_Relation_Type relation_type = jdm_relation_types.get(relation.getType());   	    
-    	    Relationship relationship = t1.createRelationshipTo(t2, relation_type);
-    	    relationship.setProperty("weight",relation.getWeight());
-    	    tx.success();
-    	}
     	
  	
 //    	String query = queries.get(relation.getType());
@@ -214,9 +153,8 @@ public class Neo4J_RelationStore {
 //                }
 //            } );
 //        }
-    }
-=======
-   
+
+
 
 	/**
 	 * Add a list of relations to Neo4j DB
@@ -238,7 +176,6 @@ public class Neo4J_RelationStore {
         	}       		   
     	    tx.success();
     	}
->>>>>>> Deleting some useless abstract class
 
     }
 
