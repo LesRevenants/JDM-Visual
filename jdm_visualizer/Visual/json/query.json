@@ -2,9 +2,9 @@
 	{
 		
 			"motx":"chat",
-			"predicat":["est"],
-			"moty":"["chien"],
+			"predicat":["est","a"],
+			"moty":["félin","animal"],
 			"input":"false",
-			"output":"true"
+			"output":"false"
 
 	}

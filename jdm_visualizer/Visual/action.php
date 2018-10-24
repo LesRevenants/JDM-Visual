@@ -14,10 +14,32 @@ else { $_POST['input'] = "false"; }
 $content = "\n\t{\n\t\t";
 	$content .= "\n\t\t\t".'"motx":"';
 	$content .= $_POST["motx"] . '",';
+
+	if(strpos($_POST["predicat"], ',') !== false) {
+		$content .= "\n\t\t\t"."\"predicat\":[";
+		$predicat = explode(',',$_POST["predicat"]);
+		foreach($predicat as $a) {
+			$content .= "\"".$a."\",";
+		}			
+		$content = substr($content, 0, -1);
+		$content .= "],";
+	}
+	else {
 	$content .= "\n\t\t\t"."\"predicat\":";
-	$content .= "[\"" . $_POST["predicat"] . '"],';
+	$content .= "[\"" . $_POST["predicat"] . '"],'; }
+	
+		if(strpos($_POST["moty"], ',') !== false) {
+		$content .= "\n\t\t\t"."\"moty\":[";
+		$predicat = explode(',',$_POST["moty"]);
+		foreach($predicat as $a) {
+			$content .= "\"".$a."\",";
+		}			
+		$content = substr($content, 0, -1);
+		$content .= "],"; }
+	else {	
 	$content .= "\n\t\t\t"."\"moty\":\"";
 	$content .= "[\"" . $_POST['moty'] . '"],';
+	}
 	$content .= "\n\t\t\t"."\"input\":\"";
 	$content .= $_POST['input'] . '",';
 	$content .= "\n\t\t\t"."\"output\":\"";
