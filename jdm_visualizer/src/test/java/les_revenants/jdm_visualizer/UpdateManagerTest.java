@@ -87,7 +87,7 @@ public class UpdateManagerTest {
     		 long query_time = Duration.between(t1,Instant.now()).toMillis();
     		 total_jdm_query_time += query_time;
     		
-    		 t2 = Instant.now();
+    		 t1 = Instant.now();
     		 if(results != null) {
     			 for(Integer r_type : results.keySet()) {
     				 total_insertion_nb += results.get(r_type).size();
@@ -100,12 +100,13 @@ public class UpdateManagerTest {
     			}
     			
     		 }
-    		 long insert_time = Duration.between(t2,Instant.now()).toMillis();
+    		 long insert_time = Duration.between(t1,Instant.now()).toMillis();
     		 total_neo4j_insert_time += insert_time;
-    		 
-    		 System.out.println("\n"+query.toString()+" : ");
+ 
+    		 System.out.print(query.toString()+" : ");
              System.out.println("\t"+nbResult(results)+" relations found, query_time : "+query_time+ "ms "
-             										+",insert time : "+insert_time+ "ms");   		    		
+             										+",insert time : "+insert_time+ "ms");   
+         
     	}
     	if(batch_insertion) {
     		t1 = Instant.now();
@@ -113,15 +114,24 @@ public class UpdateManagerTest {
     		total_neo4j_insert_time += Duration.between(t1,Instant.now()).toMillis();
     	}
     	
+    	for(RelationQuery query : workload){  		
+	   		 t1 = Instant.now();
+	   		 Map<Integer,ArrayList<Relation>> results = writeStore.query(query);
+	   		 long query_time = Duration.between(t1,Instant.now()).toMillis();
+	   		 System.out.print(query.toString()+" : ");
+	   		 System.out.println("\t"+nbResult(results)+" relations found, query_time : "+query_time+ "ms ");
+    	}
+    	
     	System.out.println("\nJDM Querying [OK] in : "+total_jdm_query_time+ "ms");
         System.out.println("Neo4J : "+total_insertion_nb+" insertion  [OK] in : "+total_neo4j_insert_time+ "ms");
+        
     }
     
    @Test
    public void testQueries() throws Exception {
 //	   testRunQueries(queries,false);
 //	   testRunQueries(queries,true);
-//       testRunQueries(queries2,true);
+       testRunQueries(queries2,true);
    }
   
     

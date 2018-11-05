@@ -131,15 +131,18 @@ public class JDM_RelationStore {
            ArrayList<Voisin> termes = mapToQuery.get(relation_type);
            if(termes != null){
                for(Voisin y : termes){
-                   if(! are_y_terms_filtered  || terms_searched.contains(y.getNoeud().getID())){  
-                	   
-	                    long y_id = y.getNoeud().getID();                      
-	                   	allRelations.putIfAbsent(relation_type,new ArrayList<>());
-	                   	Relation r = is_x_to_y_relation ?
-	                   			new Relation(0,relation_type,x_id,y_id,y.getPoids()) :  // change x and y relation according to order
-	                   			new Relation(0,relation_type,y_id,x_id,y.getPoids());
-	                   	allRelations.get(relation_type).add(r);                        
-                   }
+            	   if(y.getNoeud() != null) {
+            		   long y_id = y.getNoeud().getID();      
+            		   if(! are_y_terms_filtered  || terms_searched.contains(y_id)){            			   
+	   	                                    
+	   	                   	allRelations.putIfAbsent(relation_type,new ArrayList<>());
+	   	                   	Relation r = is_x_to_y_relation ?
+   	                   			new Relation(0,relation_type,x_id,y_id,y.getPoids()) :  // change x and y relation according to order
+   	                   			new Relation(0,relation_type,y_id,x_id,y.getPoids());
+	   	                   	allRelations.get(relation_type).add(r);                        
+                      }
+            	   }
+                  
                }
            }
 

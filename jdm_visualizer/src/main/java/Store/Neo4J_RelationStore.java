@@ -8,13 +8,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.json.JSONObject;
-
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -44,9 +45,6 @@ public class Neo4J_RelationStore {
 	 */
     private int max_size;
 
-    private GraphDatabaseService graphDb;
-
-
     /**
      * The main entry point to Neo4j graph management
      */
@@ -60,9 +58,9 @@ public class Neo4J_RelationStore {
      * Trie which associate a NEO4J_RELATION_LABEL to his corresponding name as string
      * Used to access to the good {@link NEO4J_RELATION_LABEL} from a relation encoded as string
      */
-    private PatriciaTrie<NEO4J_RELATION_LABEL> jdm_to_neo4j_relations;
-    
-    
+    private PatriciaTrie<NEO4J_RELATION_LABEL> namesToRelationshipTypes;
+    private HashMap<Integer,NEO4J_RELATION_LABEL> idToRelationshipTypes;
+
     private TermStore termStore;
     
     private RelationTypeStore relationTypeStore;
@@ -94,14 +92,16 @@ public class Neo4J_RelationStore {
         String db_server = prop.getString("url");
         File serverDir = new File(db_server);
         graph =  new GraphDatabaseFactory().newEmbeddedDatabase(serverDir); 
-        jdm_to_neo4j_relations = new PatriciaTrie<>();
+        
+        namesToRelationshipTypes = new PatriciaTrie<>();
+        idToRelationshipTypes = new HashMap<>();
         
         for(String r_name : relationTypeStore.getNames()) {
         	String neo4j_r_name = r_name.replaceAll("-", "_").toUpperCase();
         	neo4j_r_name = neo4j_r_name.replaceAll(">","_").toUpperCase();
-        		NEO4J_RELATION_LABEL label = NEO4J_RELATION_LABEL.valueOf(neo4j_r_name);
-            	jdm_to_neo4j_relations.put(r_name, label);
-//        	}	
+        	NEO4J_RELATION_LABEL label = NEO4J_RELATION_LABEL.valueOf(neo4j_r_name);
+            namesToRelationshipTypes.put(r_name, label);
+            idToRelationshipTypes.put(relationTypeStore.getId(r_name), label);
         }  
         
         this.termStore = termStore;
@@ -110,6 +110,12 @@ public class Neo4J_RelationStore {
     }
     
 
+    /**
+     * 
+     * @param query
+     * @return
+     * @throws Exception
+     */
     public Map<Integer, ArrayList<Relation>> query(RelationQuery query) throws Exception {
     	long x = query.getX();   
          String x_name = termStore.getTermName((int) x);
@@ -122,44 +128,105 @@ public class Neo4J_RelationStore {
           Set<Integer> relations_searched = query.getRelations_searched();
           Set<Long> terms_searched = query.getTerm_searched();
 
-          boolean are_relation_filtered = ! (relations_searched == null || relations_searched.isEmpty());
           boolean in = query.isIn();
           boolean isOut = query.isOut();
-              
-          if(in){
-        	  
-          }
-          if(isOut) {
-        	  
-          }
+          
+          try ( Transaction tx = graph.beginTx() ){   		
+      			Node xNode = graph.findNode(termLabel,"id",query.getX());
+      			if(xNode != null) {
+         			 query(xNode,in,isOut,relations_searched,terms_searched,allRelations);
+      			}
+      			tx.success();    	
+      	  }
           return allRelations;
     }
-
-   
+    
+    /**
+     * 
+     * @param xNode
+     * @param in
+     * @param out
+     * @param relations_searched
+     * @param terms_searched
+     * @param allRelations
+     */
+    private void query(Node xNode,boolean in, boolean out,
+    		Set<Integer> relations_searched, 	
+    		Set<Long> terms_searched,  		
+    		HashMap<Integer, ArrayList<Relation>> allRelations) {
+    	
+    	boolean are_relation_filtered = ! (relations_searched == null || relations_searched.isEmpty());
+    	if(in) {
+    		if(are_relation_filtered) {
+    			for(Integer relationId : relations_searched) {
+    				NEO4J_RELATION_LABEL label = idToRelationshipTypes.get(relationId);
+    				query(xNode, false, terms_searched, relations_searched,xNode.getRelationships(Direction.INCOMING,label).iterator(), allRelations);
+    			}
+    		}
+    		else {
+        		query(xNode, false, terms_searched, relations_searched,xNode.getRelationships(Direction.INCOMING).iterator(), allRelations);	
+    		}
+    	}
+    	if(out) {   		
+    		if(are_relation_filtered) {
+    			for(Integer relationId : relations_searched) {
+    				NEO4J_RELATION_LABEL label = idToRelationshipTypes.get(relationId);
+    				query(xNode, false, terms_searched, relations_searched,xNode.getRelationships(Direction.OUTGOING,label).iterator(), allRelations);
+    			}
+    		}
+    		else {
+    			query(xNode,true, terms_searched,relations_searched, xNode.getRelationships(Direction.OUTGOING).iterator(), allRelations);	
+    		}
+    		
+    	}
+    }
+    
+    /**
+     * 
+     * @param xNode
+     * @param is_x_to_y_relation
+     * @param terms_searched
+     * @param relations_searched
+     * @param relationsIt
+     * @param allRelations
+     */
+    private void query(Node xNode,boolean is_x_to_y_relation,
+    		Set<Long> terms_searched,
+    		Set<Integer> relations_searched, 
+    		Iterator<Relationship> relationsIt,
+    		HashMap<Integer, ArrayList<Relation>> allRelations) {
+    	
+    	  boolean are_y_terms_filtered = ! (terms_searched == null || terms_searched.isEmpty());
+    	
+    	  Long xId = (long) xNode.getProperty("id");
+    	  while(relationsIt.hasNext()) {
+  			Relationship relationship = relationsIt.next();
+  			String r_name = relationship.getType().name().toLowerCase();
+  			Integer relation_type= relationTypeStore.getId(r_name);
+  			for(Node yNode : relationship.getNodes()) {
+  				Long yId = (Long) yNode.getProperty("id");
+  				
+  				if(!are_y_terms_filtered ||  terms_searched.contains(yId)){
+  					allRelations.putIfAbsent(relation_type,new ArrayList<>());
+  					System.out.println(xId+":"+yId+":"+relation_type);
+ 					
+  					Relation r = is_x_to_y_relation ?
+	  					new Relation(0,relation_type,xId,yId,0) :  // change x and y relation according to order
+	                  	new Relation(0,relation_type,yId,xId,0);
+	                  	allRelations.get(relation_type).add(r);        
+  				}
+  			}			      
+  		 }
+    }
+    
     public int getMax_size() {
         return max_size;
     }
     	
- 	
-//    	String query = queries.get(relation.getType());
-//    	try ( Session session = driver.session() ){
-//            session.writeTransaction( new TransactionWork<Integer>(){   
-//          	
-//                public Integer execute( Transaction tx )             {
-//                    StatementResult result = tx.run(query,Values.parameters("n1", relation.getX_id(),
-//                                                    		 "n2",relation.getY_id(),                                                   		 
-//                                                    		 "w",relation.getWeight()));     
-//                    return 1;
-//                }
-//            } );
-//        }
-
-
-
 	/**
 	 * Add a list of relations to Neo4j DB
 	 * You shoud  use this method only if you need to ensure 
-	 * that each relation insertion is a success DB before inserting new terms
+	 * that each relation insertion is a success before inserting new terms
 	 * Using this method to insert a big list of relation is the best direction to bad performance ! 
 	 * @param relations : a Collection of @See{Relation}
 	 */
@@ -170,7 +237,7 @@ public class Neo4J_RelationStore {
 
         	if(x_node != null && y_node != null) {
         		String r_name = relationTypeStore.getName(relation.getType()); // get relation name into Neo4j
-            	RelationshipType r_type = jdm_to_neo4j_relations.get(r_name); // get correspondig ENUM which has r_name as name
+            	RelationshipType r_type = namesToRelationshipTypes.get(r_name); // get correspondig ENUM which has r_name as name
         		Relationship relationship = x_node.createRelationshipTo(y_node,r_type);
             	relationship.setProperty("weight",relation.getWeight());  
         	}       		   
@@ -181,11 +248,6 @@ public class Neo4J_RelationStore {
 
    
     public void delete(Relation relation) {
-
-    }
-
-   
-    public void update(Relation oldRelation, Relation newRelation) {
 
     }
 
@@ -218,7 +280,7 @@ public class Neo4J_RelationStore {
             	Node y_node = graph.findNode(termLabel,"id",relation.getY_id());                  	
             	if(x_node != null && y_node != null) {
             		String r_name = relationTypeStore.getName(relation.getType()); // get relation name into Neo4j
-                	RelationshipType r_type = jdm_to_neo4j_relations.get(r_name); // get correspondig ENUM which has r_name as name
+                	RelationshipType r_type = namesToRelationshipTypes.get(r_name); // get correspondig ENUM which has r_name as name
             		Relationship relationship = x_node.createRelationshipTo(y_node,r_type);
                 	relationship.setProperty("weight",relation.getWeight());   	  
             	}          	

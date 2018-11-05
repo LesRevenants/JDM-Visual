@@ -105,6 +105,12 @@ public class MasterStore {
 		return relationTypeStore;
 	}
     
+    /**
+     * 
+     * @param query
+     * @return
+     * @throws Exception
+     */
     public Map<Integer, ArrayList<Relation>> query(RelationQuery query) throws Exception {
     	int xId = query.getX();
     	if(termWithRelationsInDB.contains(xId)) {
@@ -116,9 +122,14 @@ public class MasterStore {
 		return results;   	
     }
     
+    /**
+     * 
+     * @param queryAsJson
+     * @return
+     * @throws Exception
+     */
     public String query(String queryAsJson) throws Exception{
-    	StringBuilder sb = new StringBuilder();
-    	
+    	    	
     	byte[] encodedjSON = queryAsJson.getBytes();
     	String stringJSON = new String(encodedjSON);
 		JSONObject rootObj =  new JSONObject(stringJSON);
@@ -144,6 +155,12 @@ public class MasterStore {
     	return buildJsonContent(queryResults, format);
     }
     
+    /**
+     * 
+     * @param queryResults
+     * @param format
+     * @return
+     */
     private String buildJsonContent(Map<Integer, ArrayList<Relation>> queryResults,String format){
     	JSONObject jsonObj = new JSONObject();
     	
