@@ -90,7 +90,7 @@ public class JDM_RelationStore {
      * SubMethod used to ease to querying according incoming and/or outcoming relation filtering
      * @param mot the x word to search
      * @param in : true if incoming x relation are required
-     * @param out : true if outcoming x relation are required
+     * @param out : true if outgoing x relation are required
      * @param relations_searched : the list of different relation like for all x r y | r belongs to relations_searched
      * if null, no filter is applied on relations
      * @param terms_searched : the list of different term like for all x r y | y belongs to terms_searched
@@ -134,12 +134,22 @@ public class JDM_RelationStore {
             	   if(y.getNoeud() != null) {
             		   long y_id = y.getNoeud().getID();      
             		   if(! are_y_terms_filtered  || terms_searched.contains(y_id)){            			   
-	   	                                    
-	   	                   	allRelations.putIfAbsent(relation_type,new ArrayList<>());
-	   	                   	Relation r = is_x_to_y_relation ?
-   	                   			new Relation(0,relation_type,x_id,y_id,y.getPoids()) :  // change x and y relation according to order
-   	                   			new Relation(0,relation_type,y_id,x_id,y.getPoids());
-	   	                   	allRelations.get(relation_type).add(r);                        
+//	   	                    if(termStore.getTermName((int) y_id) == null) {
+//	   	                    	
+//	   	                    }
+//	   	                    else {
+	   	                    	allRelations.putIfAbsent(relation_type,new ArrayList<>());
+		   	                   	Relation r = is_x_to_y_relation ?
+	   	                   			new Relation(0,relation_type,x_id,y_id,y.getPoids()) :  // change x and y relation according to order
+	   	                   			new Relation(0,relation_type,y_id,x_id,y.getPoids());
+		   	                   	allRelations.get(relation_type).add(r);                
+//	   	                    }
+		   	                 	
+//	   	                    }
+//	   	                    else {
+//	   	                    	System.out.println("JDM:"+y_id+":"+y.getNom());
+//	   	                    }
+	   	                           
                       }
             	   }
                   

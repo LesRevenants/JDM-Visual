@@ -68,13 +68,13 @@ public class TermStoreTEst {
 
         Map<String,Integer> termIndex = termStore.getTermIndex();
         Collection<String> terms = termStore.getTermsName();
-        Collection<String> mweTerms = termStore.getMweTermsURI();
-        assert(termIndex.size() == terms.size() + mweTerms.size());
+//        Collection<String> mweTerms = termStore.getMweTermsURI();
+//        assert(termIndex.size() == terms.size() + mweTerms.size());
         assert(termStore.getTermsLength() == terms.size());
-        assert(termStore.getMweTermsLentgh() == mweTerms.size());
+//        assert(termStore.getMweTermsLentgh() == mweTerms.size());
         assert(termStore.length() == termIndex.size());
         System.out.println("\tlength="+termStore.length()+", size="+termStore.size());
-        System.out.println("\tTerms.length()="+termStore.getTermsLength()+", MweTerms.length()="+termStore.getMweTermsLentgh());
+//        System.out.println("\tTerms.length()="+termStore.getTermsLength()+", MweTerms.length()="+termStore.getMweTermsLentgh());
         System.out.println("\tTerms.size()="+termStore.getTermsSize()+", MweTerms.size()="+termStore.getMweTermsSize());
     }
 
@@ -101,7 +101,7 @@ public class TermStoreTEst {
                     String name = parts[1];
                     assertNotNull(store.getTermId(name));
                     store.getTermName(id);
-                    store.getMweTermName(id);
+//                    store.getMweTermName(id);
                     i.incrementAndGet();
                     totalDicoSize.getAndAdd(name.length());
                 }

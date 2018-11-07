@@ -76,12 +76,6 @@ public class RelationQuery {
 
     @Override
     public String toString() {
-        return "RelationQuery{" +
-                "x='" + x + '\'' +
-                ", term_searched=" + term_searched +
-                ", in=" + in +
-                ", out=" + out +
-                ", relations_searched=" + relations_searched +
-                '}';
+        return "{"+x+","+term_searched+","+relations_searched+","+in+","+out+"}";
     }
 }

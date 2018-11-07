@@ -22,13 +22,12 @@ public class TermStore {
     private Map<Integer,String> termsByIds;
     
 
-    private Map<Integer,String> mweTermsByIds;
+//    private Map<Integer,String> mweTermsByIds;
 
 
     public TermStore(){
         termsTrie = new PatriciaTrie<>();
         termsByIds = new HashMap<>();
-        mweTermsByIds = new HashMap<>();
     }
 
   
@@ -36,9 +35,9 @@ public class TermStore {
     	this();
     	List<String> lines = Files.readAllLines(Paths.get(filePath),StandardCharsets.UTF_8);
 		for(String line : lines) {
-			String[] parts = line.split(",");
-			int id = Integer.parseInt(parts[0]);
+			String[] parts = line.split(";");	
 			if(parts.length == 2) {
+				int id = Integer.parseInt(parts[0]);
 				addTerm(id,parts[1]);
 			}	
 		}
@@ -60,34 +59,12 @@ public class TermStore {
 
     
     public void addTerm(int id, String name) {
-        boolean is_mwe = name.contains("_") || name.contains(" ") || name.contains("-");
+//        boolean is_mwe = name.contains("_") || name.contains(" ") || name.contains("-");
         // must optimize research with regex or search algorithm which exploit the set of mwe word identifier characters
 
-        Integer termId = termsTrie.get(name);
-        if (termId == null) { // term not already exist
-
-            termsTrie.put(name,id);
-            if (is_mwe){
-                mweTermsByIds.put(id,name);
-                total_term_size += name.length();
-            }
-            else{
-                termsByIds.put(id, name);
-                mwe_total_term_size += name.length();
-            }
-            return;
-        }
-        if (id != termId) {
-            if (!is_mwe) {
-                termsByIds.remove(termId);
-                termsByIds.put(id, name);
-
-            } else {
-                mweTermsByIds.remove(termId);
-                mweTermsByIds.put(id, name);
-
-            }         
-        }
+        termsTrie.put(name,id);         
+        termsByIds.put(id, name);
+        total_term_size += name.length();
     }
 
 
@@ -95,7 +72,7 @@ public class TermStore {
     public void resetTerms() {
         termsTrie.clear();
         termsByIds.clear();
-        mweTermsByIds.clear();
+//        mweTermsByIds.clear();
     }
 
     
@@ -124,9 +101,9 @@ public class TermStore {
     }
 
     
-    public int getMweTermsLentgh() {
-        return mweTermsByIds.size();
-    }
+//    public int getMweTermsLentgh() {
+//        return mweTermsByIds.size();
+//    }
 
 
 
@@ -159,16 +136,16 @@ public class TermStore {
 
 
 	
-	public Collection<String> getMweTermsURI() {
-		return mweTermsByIds.values();
-	}
-
-
-
-	
-	public Collection<Integer> getMweTermsIds() {
-		return mweTermsByIds.keySet();
-	}
+//	public Collection<String> getMweTermsURI() {
+//		return mweTermsByIds.values();
+//	}
+//
+//
+//
+//	
+//	public Collection<Integer> getMweTermsIds() {
+//		return mweTermsByIds.keySet();
+//	}
 
 
 
@@ -187,9 +164,9 @@ public class TermStore {
 		return termsByIds.get(termId);
 	}
 
-	public String getMweTermName(int termId) {
-		return mweTermsByIds.get(termId);
-	}
+//	public String getMweTermName(int termId) {
+//		return mweTermsByIds.get(termId);
+//	}
 
 
 	public boolean addTerm(Collection<Integer> ids, Collection<String> names) {

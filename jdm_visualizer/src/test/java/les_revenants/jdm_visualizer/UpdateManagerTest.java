@@ -28,17 +28,18 @@ public class UpdateManagerTest {
     public static MasterStore masterStore;
     public static TermStore termStore;
     public static RelationTypeStore relationTypeStore;
-    public static List<String> entries,mweEntries,allEntries;
+//    public static List<String> allEntries;
 
     public static List<RelationQuery> queries,queries2;
     
     @BeforeClass
     public static void setUp() throws IOException, NumberFormatException, SQLException{
+    	
     	queries=new ArrayList<>();
         queries2=new ArrayList<>();     
-        entries = Files.readAllLines(Paths.get("data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt"),StandardCharsets.ISO_8859_1);
-        mweEntries = Files.readAllLines(Paths.get("data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt"),StandardCharsets.ISO_8859_1);
-        allEntries = Files.readAllLines(Paths.get("data/terms.txt"),StandardCharsets.UTF_8);
+//        entries = Files.readAllLines(Paths.get("data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt"),StandardCharsets.ISO_8859_1);
+//        mweEntries = Files.readAllLines(Paths.get("data/07032018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt"),StandardCharsets.ISO_8859_1);
+//        allEntries = Files.readAllLines(Paths.get("data/terms.txt"),StandardCharsets.UTF_8);
 
 
         Instant t1 = Instant.now();
@@ -58,9 +59,11 @@ public class UpdateManagerTest {
         queries.add(queryFactory.create("ours",Arrays.asList("félin","miel","animal","brun","griffe"),Arrays.asList("r_isa","r_associated","r_carac","r_has_part")));
 
         String[] words = { 
-        		"chien","tortue","médicament",
+        		"piano"
+        		,"chien","tortue","médicament",
         		"voiture","avocat","fichier","femme","alpinisme",
-        		"sérac","piano","Everest","vin","palais","poumon"};
+        		"sérac","piano","Everest","vin","palais","poumon"
+        		};
         for(String word : words) {
         	queries2.add(queryFactory.create(word));
         }
@@ -68,88 +71,84 @@ public class UpdateManagerTest {
     }
 
 
-    private void testRunQueries(Collection<RelationQuery> workload,boolean batch_insertion) throws Exception{
+    private void testRunQueries(Collection<RelationQuery> workload) throws Exception{
     	JDM_RelationStore inputStore = masterStore.getInputStore();
     	Neo4J_RelationStore writeStore = masterStore.getPersistentStore();
     	writeStore.reset();
     	
-        Instant t1 = Instant.now(), t2;
         System.out.println("Run queries [START]");
+        Instant t1 = Instant.now();
         
         long total_jdm_query_time = 0,
-        	 total_neo4j_insert_time = 0;
-        long total_insertion_nb = 0;
+        	 total_neo4j_insert_time = 0,
+        	 total_neo4j_querying_time = 0,
+        	 insert_time = 0, query_time = 0;
         
     	for(RelationQuery query : workload){
     		
     		 t1 = Instant.now();
     		 Map<Integer,ArrayList<Relation>> results = inputStore.query(query);
-    		 long query_time = Duration.between(t1,Instant.now()).toMillis();
+    		 query_time = Duration.between(t1,Instant.now()).toMillis();
     		 total_jdm_query_time += query_time;
     		
     		 t1 = Instant.now();
     		 if(results != null) {
     			 for(Integer r_type : results.keySet()) {
-    				 total_insertion_nb += results.get(r_type).size();
-    				 if(batch_insertion) {
-    					 writeStore.addRelations(results.get(r_type));
-    				 }
-    				 else {  					
-    					results.get(r_type).forEach(relation -> writeStore.addRelation(relation));
-    	        	} 
-    			}
-    			
+    				 writeStore.addRelations(results.get(r_type));
+    			 }   			
     		 }
-    		 long insert_time = Duration.between(t1,Instant.now()).toMillis();
+    		 insert_time = Duration.between(t1,Instant.now()).toMillis();
     		 total_neo4j_insert_time += insert_time;
- 
-    		 System.out.print(query.toString()+" : ");
-             System.out.println("\t"+nbResult(results)+" relations found, query_time : "+query_time+ "ms "
-             										+",insert time : "+insert_time+ "ms");   
-         
-    	}
-    	if(batch_insertion) {
-    		t1 = Instant.now();
-    		writeStore.flush();
-    		total_neo4j_insert_time += Duration.between(t1,Instant.now()).toMillis();
+	   		  
+    		 System.out.println(query+" : JDM : "+nbResult(results)+" relations found, query_time : "+query_time+ "ms ");   
+            
     	}
     	
-    	for(RelationQuery query : workload){  		
-	   		 t1 = Instant.now();
-	   		 Map<Integer,ArrayList<Relation>> results = writeStore.query(query);
-	   		 long query_time = Duration.between(t1,Instant.now()).toMillis();
-	   		 System.out.print(query.toString()+" : ");
-	   		 System.out.println("\t"+nbResult(results)+" relations found, query_time : "+query_time+ "ms ");
+    	t1 = Instant.now();
+    	writeStore.flush();
+    	insert_time = Duration.between(t1,Instant.now()).toMillis();
+		total_neo4j_insert_time += insert_time;
+		System.out.println();
+		
+    	for(RelationQuery query : workload){
+
+       	 	t1 = Instant.now();  	 
+   		 	Map<Integer,ArrayList<Relation>> results2 = writeStore.query(query);	
+      		long query_time2 = Duration.between(t1,Instant.now()).toMillis();
+      		total_neo4j_querying_time += query_time2;
+      		 
+      		System.out.println(query+" : Neo4J : "+nbResult(results2)+" relations found, query_time : "+query_time2+ "ms");   
     	}
-    	
+    	  	
     	System.out.println("\nJDM Querying [OK] in : "+total_jdm_query_time+ "ms");
-        System.out.println("Neo4J : "+total_insertion_nb+" insertion  [OK] in : "+total_neo4j_insert_time+ "ms");
-        
+        System.out.println("Neo4J Insertion  [OK] in : "+total_neo4j_insert_time+ "ms");
+    	System.out.println("Neo4j Querying [OK] in : "+total_neo4j_querying_time+ "ms");
+
     }
     
    @Test
    public void testQueries() throws Exception {
 //	   testRunQueries(queries,false);
 //	   testRunQueries(queries,true);
-       testRunQueries(queries2,true);
+       testRunQueries(queries2);
    }
   
     
-   @Test
-   public void testJSON() throws Exception{
-	    System.out.println("TEST_JSON");
-		RelationQuery q1 = queries.get(1);
-		String q1JSON = q1.asJSON(termStore, relationTypeStore,"grouped");
-		System.out.println(q1JSON);	
-		
-		String q1ResultsJSON = masterStore.query(q1JSON);
-		System.out.println(q1ResultsJSON);
-   }
+//   @Test
+//   public void testJSON() throws Exception{
+//	    System.out.println("TEST_JSON");
+//		RelationQuery q1 = queries.get(1);
+//		String q1JSON = q1.asJSON(termStore, relationTypeStore,"grouped");
+//		System.out.println(q1JSON);	
+//		
+//		String q1ResultsJSON = masterStore.query(q1JSON);
+//		System.out.println(q1ResultsJSON);
+//   }
 
-    private int nbResult(Map<Integer,ArrayList<Relation>> results){
-        Integer i = 0;
+    public static int nbResult(Map<Integer,ArrayList<Relation>> results){
         if(results == null)
-            return i;
+            return 0;
+        int i = 0;
         for(Integer key : results.keySet()){
             i +=results.get(key).size();
         }
