@@ -62,11 +62,30 @@ public class UpdateManagerTest {
         		"piano"
         		,"chien","tortue","médicament",
         		"voiture","avocat","fichier","femme","alpinisme",
-        		"sérac","piano","Everest","vin","palais","poumon"
-        		};
+        		"sérac","piano","Everest","vin","palais","poumon",
+        		"langoustine","militaire","histoire","médecin","biologie",
+        		"pétrole","colbat","glacier","théâtre","masque","peinture",
+        		"liberalisme","anarchisme","communisme","facisme","socialisme",
+        		"compotée","cheval","mandragore","factorisation","graphe","sémantique",
+        		"dictionnaire","amplificateur","astre","LSD","alcool","buffer-overflow"
+        };
+        
+        String[] r_types = {"r_isa","r_pos","r_associated","r_carac","r_has_part"};
+        String[] y_terms = {"félin","souris","nom","piolet","encre","plume","chiot","bouteille",
+        					"table","ficelle","violon","poumon"};
+        
         for(String word : words) {
-        	queries2.add(queryFactory.create(word));
+        	for(String type : r_types) {
+        		for(String term : y_terms) {
+        			RelationQuery q = queryFactory.create(word,Arrays.asList(term),Arrays.asList(type));
+        			if(q != null) {
+            			queries2.add(q);
+        			}
+        		}       	     	
+        	}
         }
+        List<RelationQuery> queriesCopy = new ArrayList<>(queries2);
+        queries2.addAll(queriesCopy);
        
     }
 
@@ -86,43 +105,51 @@ public class UpdateManagerTest {
         
     	for(RelationQuery query : workload){
     		
-    		 t1 = Instant.now();
-    		 Map<Integer,ArrayList<Relation>> results = inputStore.query(query);
-    		 query_time = Duration.between(t1,Instant.now()).toMillis();
-    		 total_jdm_query_time += query_time;
+    		t1 = Instant.now();
+    		Map<Integer,ArrayList<Relation>> results = masterStore.query(query);
+    		query_time = Duration.between(t1,Instant.now()).toMillis();
+    		if(results != null && ! results.isEmpty()) {
+       		    System.out.println(query+" : "+nbResult(results)+" relations found, query_time : "+query_time+ "ms ");  
+    		}
     		
-    		 t1 = Instant.now();
-    		 if(results != null) {
-    			 for(Integer r_type : results.keySet()) {
-    				 writeStore.addRelations(results.get(r_type));
-    			 }   			
-    		 }
-    		 insert_time = Duration.between(t1,Instant.now()).toMillis();
-    		 total_neo4j_insert_time += insert_time;
-	   		  
-    		 System.out.println(query+" : JDM : "+nbResult(results)+" relations found, query_time : "+query_time+ "ms ");   
-            
+//    		
+//    		 t1 = Instant.now();
+//    		 Map<Integer,ArrayList<Relation>> results = inputStore.query(query);
+//    		 query_time = Duration.between(t1,Instant.now()).toMillis();
+//    		 total_jdm_query_time += query_time;
+//    		
+//    		 t1 = Instant.now();
+//    		 if(results != null) {
+//    			 for(Integer r_type : results.keySet()) {
+//    				 writeStore.insert(results.get(r_type));
+//    			 }   			
+//    		 }
+//    		 insert_time = Duration.between(t1,Instant.now()).toMillis();
+//    		 total_neo4j_insert_time += insert_time;
+//	   		  
+//    		 System.out.println(query+" : JDM : "+nbResult(results)+" relations found, query_time : "+query_time+ "ms ");   
+//            
     	}
     	
-    	t1 = Instant.now();
-    	writeStore.flush();
-    	insert_time = Duration.between(t1,Instant.now()).toMillis();
-		total_neo4j_insert_time += insert_time;
-		System.out.println();
-		
-    	for(RelationQuery query : workload){
-
-       	 	t1 = Instant.now();  	 
-   		 	Map<Integer,ArrayList<Relation>> results2 = writeStore.query(query);	
-      		long query_time2 = Duration.between(t1,Instant.now()).toMillis();
-      		total_neo4j_querying_time += query_time2;
-      		 
-      		System.out.println(query+" : Neo4J : "+nbResult(results2)+" relations found, query_time : "+query_time2+ "ms");   
-    	}
-    	  	
-    	System.out.println("\nJDM Querying [OK] in : "+total_jdm_query_time+ "ms");
-        System.out.println("Neo4J Insertion  [OK] in : "+total_neo4j_insert_time+ "ms");
-    	System.out.println("Neo4j Querying [OK] in : "+total_neo4j_querying_time+ "ms");
+//    	t1 = Instant.now();
+//    	writeStore.flush();
+//    	insert_time = Duration.between(t1,Instant.now()).toMillis();
+//		total_neo4j_insert_time += insert_time;
+//		System.out.println();
+//		
+//    	for(RelationQuery query : workload){
+//
+//       	 	t1 = Instant.now();  	 
+//   		 	Map<Integer,ArrayList<Relation>> results2 = writeStore.query(query);	
+//      		long query_time2 = Duration.between(t1,Instant.now()).toMillis();
+//      		total_neo4j_querying_time += query_time2;
+//      		 
+//      		System.out.println(query+" : Neo4J : "+nbResult(results2)+" relations found, query_time : "+query_time2+ "ms");   
+//    	}
+//    	  	
+//    	System.out.println("\nJDM Querying [OK] in : "+total_jdm_query_time+ "ms");
+//        System.out.println("Neo4J Insertion  [OK] in : "+total_neo4j_insert_time+ "ms");
+//    	System.out.println("Neo4j Querying [OK] in : "+total_neo4j_querying_time+ "ms");
 
     }
     

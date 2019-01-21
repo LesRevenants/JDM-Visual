@@ -11,19 +11,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class TermStore {
 
     private PatriciaTrie<Integer> termsTrie;
-    private int total_term_size, mwe_total_term_size;
+    private int total_term_size;
 
     /** Map integer id to  */
     private Map<Integer,String> termsByIds;
     
-
-//    private Map<Integer,String> mweTermsByIds;
-
 
     public TermStore(){
         termsTrie = new PatriciaTrie<>();
@@ -74,12 +70,6 @@ public class TermStore {
         termsByIds.clear();
 //        mweTermsByIds.clear();
     }
-
-    
-    public int size() {
-        return total_term_size+mwe_total_term_size;
-    }
-
     
     public int length() {
         return termsTrie.size();
@@ -95,60 +85,13 @@ public class TermStore {
         return termsByIds.size();
     }
 
-    
-    public int getMweTermsSize() {
-        return mwe_total_term_size;
-    }
-
-    
-//    public int getMweTermsLentgh() {
-//        return mweTermsByIds.size();
-//    }
-
-
-
-	
-	public Collection<String> getAllTermsName() {
+	public Collection<String> getTermsName() {
 		return termsTrie.keySet();
 	}
-
-
-
-	
-	public Collection<Integer> getAllTermsIds() {
-		return termsTrie.values();
-	}
-
-
-
-	
-	public Collection<String> getTermsName() {
-		return termsByIds.values();
-	}
-
-
-
 	
 	public Collection<Integer> getTermsIds() {
 		return termsByIds.keySet();
 	}
-
-
-
-	
-//	public Collection<String> getMweTermsURI() {
-//		return mweTermsByIds.values();
-//	}
-//
-//
-//
-//	
-//	public Collection<Integer> getMweTermsIds() {
-//		return mweTermsByIds.keySet();
-//	}
-
-
-
 	
 	public Map<String, Integer> getTermIndex() {
 		return termsTrie;
@@ -158,20 +101,9 @@ public class TermStore {
     public Integer getTermId(String termName) {
         return termsTrie.get(termName);
     }
-
 	
 	public String getTermName(int termId) {
 		return termsByIds.get(termId);
-	}
-
-//	public String getMweTermName(int termId) {
-//		return mweTermsByIds.get(termId);
-//	}
-
-
-	public boolean addTerm(Collection<Integer> ids, Collection<String> names) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 

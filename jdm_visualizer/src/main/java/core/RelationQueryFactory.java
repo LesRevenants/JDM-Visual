@@ -17,13 +17,19 @@ public class RelationQueryFactory {
 	}
 	
 	public RelationQuery create(String x_word) {
-		int x_id = termStore.getTermId(x_word);
+		Integer x_id = termStore.getTermId(x_word);
+		if(x_id == null) {
+			return null;
+		}
 		RelationQuery query = new RelationQuery(x_id, null, true,true, null);
 		return query;
 	}
 	
 	public RelationQuery create(String x_word,List<String> term_searched, boolean in, boolean out, List<String> relations_searched) {
-		int x_id = termStore.getTermId(x_word);
+		Integer x_id = termStore.getTermId(x_word);
+		if(x_id == null) {
+			return null;
+		}
 		HashSet<Long> term_ids = new HashSet<>();
 		if(relations_searched != null) {
 			for(String term : term_searched) {

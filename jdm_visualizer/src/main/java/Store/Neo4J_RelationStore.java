@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,11 +49,12 @@ public class Neo4J_RelationStore {
      * The main entry point to Neo4j graph management
      */
     private GraphDatabaseService graph;
+    
     private Label termLabel = Label.label("Term");
     
     
     public static final String delete_all_relationship = " MATCH ()-[r]->() delete r";
-    public static final String count_all_relationship = "MATCH (n)-[r]->() RETURN COUNT(r)";
+//    public static final String count_all_relationship = "MATCH (n)-[r]->() RETURN COUNT(r)";
    
     /**
      * Trie which associate a NEO4J_RELATION_LABEL to his corresponding name as string
@@ -70,12 +72,12 @@ public class Neo4J_RelationStore {
      * Buffer used to store temporarily a list of relation. Used for minimize number
      * of Neo4j transaction
      */
-    private ArrayList<Relation> relationBuffer;
+    private LinkedList<Relation> relationBuffer;
     
     /**
      * The max number of relation into {@link relationBuffer}
      */
-    private static final int MAX_BATCH_SIZE = 8192*16;
+    private static final int MAX_BATCH_SIZE = 65536;
    
     final static Logger logger = Logger.getLogger("Neo4J_RelationStore");
     
@@ -110,7 +112,8 @@ public class Neo4J_RelationStore {
         
         this.termStore = termStore;
         this.relationTypeStore = relationTypeStore;
-        relationBuffer = new ArrayList<>(MAX_BATCH_SIZE);
+        relationBuffer = new LinkedList<>();
+    
     }
     
 
@@ -120,13 +123,14 @@ public class Neo4J_RelationStore {
      * @return
      * @throws Exception
      */
+    
     public Map<Integer, ArrayList<Relation>> query(RelationQuery query) throws Exception {
 		long x = query.getX();   
 		String x_name = termStore.getTermName((int) x);
 		if(x_name == null) {
 			return null;
 		}
-		  
+		
 		 HashMap<Integer, ArrayList<Relation>> allRelations = new HashMap<>();
 		 Set<Integer> relations_searched = query.getRelations_searched();
 		 Set<Long> terms_searched = query.getTerm_searched();
@@ -161,21 +165,28 @@ public class Neo4J_RelationStore {
     	boolean are_relation_filtered = ! (relations_searched == null || relations_searched.isEmpty());
     	if(in) {
     		if(are_relation_filtered) {
+    			NEO4J_RELATION_LABEL[] labels = new NEO4J_RELATION_LABEL[relations_searched.size()];
+    			int i=0;
     			for(Integer relationId : relations_searched) {
     				NEO4J_RELATION_LABEL label = idToRelationshipTypes.get(relationId);
-    				query(xNode, false, terms_searched, relations_searched,xNode.getRelationships(Direction.INCOMING,label).iterator(), allRelations);
+    				labels[i++] = label;
     			}
+				query(xNode, false, terms_searched, relations_searched,xNode.getRelationships(Direction.INCOMING,labels).iterator(), allRelations);
     		}
     		else {
+    		
         		query(xNode, false, terms_searched, relations_searched,xNode.getRelationships(Direction.INCOMING).iterator(), allRelations);	
     		}
     	}
     	if(out) {   		
     		if(are_relation_filtered) {
+    			NEO4J_RELATION_LABEL[] labels = new NEO4J_RELATION_LABEL[relations_searched.size()];
+    			int i=0;
     			for(Integer relationId : relations_searched) {
     				NEO4J_RELATION_LABEL label = idToRelationshipTypes.get(relationId);
-    				query(xNode, true, terms_searched, relations_searched,xNode.getRelationships(Direction.OUTGOING,label).iterator(), allRelations);
+    				labels[i++] = label;
     			}
+				query(xNode, true, terms_searched, relations_searched,xNode.getRelationships(Direction.OUTGOING,labels).iterator(), allRelations);
     		}
     		else {
     			query(xNode,true, terms_searched,relations_searched, xNode.getRelationships(Direction.OUTGOING).iterator(), allRelations);	
@@ -272,7 +283,7 @@ public class Neo4J_RelationStore {
 	 * that all relations are inserted into DB
 	 * @param relations : a Collection of @See{Relation}
 	 */
-	public void addRelations(Collection<Relation> relations) {  
+	public void insert(Collection<Relation> relations) {  
 		
 		if(relations.size() <= MAX_BATCH_SIZE) {			
 			relationBuffer.addAll(relations);	
@@ -280,7 +291,28 @@ public class Neo4J_RelationStore {
 				insertRelations();	
 				relationBuffer.clear();
 			}	
-		}		
+		}
+		else {
+			int i=0;
+			Iterator<Relation> it = relations.iterator();
+			while(it.hasNext()) {
+				Relation relation = it.next();
+				relationBuffer.add(relation);
+				i++;
+				if(i == MAX_BATCH_SIZE) {
+					insertRelations();
+					relationBuffer.clear();
+					i=0;
+				}
+			}
+			
+		}
+	}
+	
+	public void insert(Map<Integer, ArrayList<Relation>> relationMap) {
+		for(Integer r_type : relationMap.keySet()) {
+			insert(relationMap.get(r_type));
+		}
 	}
 	
 	
@@ -294,7 +326,7 @@ public class Neo4J_RelationStore {
             	
             	if(x_node != null && y_node != null) {
             		String r_name = relationTypeStore.getName(relation.getType()); // get relation name into Neo4j
-                	RelationshipType r_type = namesToRelationshipTypes.get(r_name); // get correspondig ENUM which has r_name as name
+                	RelationshipType r_type = namesToRelationshipTypes.get(r_name); // get correspondig ENUM which has r_name as name              	
             		Relationship relationship = x_node.createRelationshipTo(y_node,r_type);
                 	relationship.setProperty("weight",relation.getWeight());   	  
             	}   
@@ -321,9 +353,12 @@ public class Neo4J_RelationStore {
 	public void flush() {
 		if(! relationBuffer.isEmpty()) {
 			insertRelations();
+			relationBuffer.clear();
 		}		
 	}
-    
-
-
+	
+	public boolean isFlushed() {
+		return relationBuffer.isEmpty();
+	}
+	
 }

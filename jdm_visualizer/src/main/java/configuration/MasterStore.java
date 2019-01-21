@@ -31,7 +31,7 @@ public class MasterStore {
      */
     private Neo4J_RelationStore persistentStore;
     
-	public HashSet<Integer> termWithRelationsInDB;
+	private HashSet<Integer> termWithRelationsInDB,termBuffer;	
     
     /**
      * The in memory termStore
@@ -66,8 +66,8 @@ public class MasterStore {
 		termStore = new TermStore(serialized_terms_path);
 		logger.info("MemoryTermStore init[OK]");
 			
-		String relationsPath = memoryObj.getString("relations");									
-		relationTypeStore = new RelationTypeStore(relationsPath);
+		String relationsTypePath = memoryObj.getString("relations");									
+		relationTypeStore = new RelationTypeStore(relationsTypePath);
 		logger.info("RelationTypeStore init[OK]");
 				
 		JSONObject persistentObj = rootObj.getJSONObject("persistent");
@@ -80,9 +80,10 @@ public class MasterStore {
     	inputStore = new JDM_RelationStore(termStore);
         logger.info("JDM store building [OK]");
         
-        termWithRelationsInDB = new HashSet<>();   	
+        termWithRelationsInDB = new HashSet<>();
+        termBuffer = new HashSet<>();	
         queryFactory  = new RelationQueryFactory(termStore, relationTypeStore);
-       
+             
     }
     
   
@@ -114,10 +115,20 @@ public class MasterStore {
     	if(termWithRelationsInDB.contains(xId)) {
     		return persistentStore.query(query); 		
     	}
+    	String query_x_name = termStore.getTermName(query.getX());
+    	RelationQuery getAllX = queryFactory.create(query_x_name);   	
+    	Map<Integer, ArrayList<Relation>> results = inputStore.query(getAllX);
     	
-    	Map<Integer, ArrayList<Relation>> results = inputStore.query(query);
-    	applyUpdateStrategy(results);
-		return results;   	
+    	if(results != null) {
+    		boolean askPersistent = applyUpdateStrategy(xId,results);
+        	if(askPersistent) {
+        		persistentStore.insert(results);
+        		persistentStore.flush();
+        		termWithRelationsInDB.add(xId);    		
+        	} 	 
+    	}
+    	return results;
+    		
     }
     
    
@@ -192,11 +203,11 @@ public class MasterStore {
     
     
     
-    private void applyUpdateStrategy(Map<Integer, ArrayList<Relation>> results) {
-    	
+    private boolean applyUpdateStrategy(int xId,Map<Integer, ArrayList<Relation>> results) {    	
+    	return true;
     }
     
-    
+   
     
    
 }

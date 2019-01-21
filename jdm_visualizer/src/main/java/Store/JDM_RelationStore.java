@@ -22,12 +22,12 @@ public class JDM_RelationStore {
     private TermStore termStore;
 
     public JDM_RelationStore(TermStore termStore){
-        requeterRezo = new RequeterRezoDump("1h","64Mo");
+        requeterRezo = new RequeterRezoDump("4h","64Mo");
         requeterRezo.viderCache();
         this.termStore = termStore;
     }
 
-
+    
     /**
      * Allow to query JDM rezeoDump with a query
      * @param query

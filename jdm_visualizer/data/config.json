@@ -1,7 +1,7 @@
 {
 	"memory":{
-		"terms":"data/all_terms.txt",	
-		"relations":"data/relations.txt"
+		"terms":["data/10182018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt","10182018-LEXICALNET-JEUXDEMOTS-ENTRIES-MWE.txt"],
+		"relation_types":"data/relation.txt"
 	},
 
 	"persistent":{
@@ -9,7 +9,7 @@
 		"stores": {
 			"Neo4j":{
 				"max_relation":10000000,
-				"url":"/auto_home/rcolin/Documents/M2/HMIN340/neo4j-community-3.4.7/data/databases/graph.db"			
+				"url":"/home/user/Téléchargements/softwares/Database/neo4j-community-3.4.9-unix/neo4j-community-3.4.9/data/databases/graph.db"	
 			}
 		}
 	}
