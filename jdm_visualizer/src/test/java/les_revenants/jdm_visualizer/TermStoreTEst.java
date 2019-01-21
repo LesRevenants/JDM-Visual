@@ -73,7 +73,7 @@ public class TermStoreTEst {
         assert(termStore.getTermsLength() == terms.size());
 //        assert(termStore.getMweTermsLentgh() == mweTerms.size());
         assert(termStore.length() == termIndex.size());
-        System.out.println("\tlength="+termStore.length()+", size="+termStore.getTermsSize());
+        System.out.println("\tlength="+termStore.length()+", size="+termStore.getTotalSize());
 //        System.out.println("\tTerms.length()="+termStore.getTermsLength()+", MweTerms.length()="+termStore.getMweTermsLentgh());
     }
 

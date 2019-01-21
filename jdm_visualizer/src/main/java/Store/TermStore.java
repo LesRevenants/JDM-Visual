@@ -29,13 +29,20 @@ public class TermStore {
   
     public TermStore(String filePath) throws IOException {
     	this();
-    	List<String> lines = Files.readAllLines(Paths.get(filePath),StandardCharsets.UTF_8);
+    	addTerms(filePath);   	
+    }
+    
+    public void addTerms(String filePath) throws IOException {
+    	List<String> lines = Files.readAllLines(Paths.get(filePath),StandardCharsets.ISO_8859_1);
 		for(String line : lines) {
-			String[] parts = line.split(";");	
-			if(parts.length == 2) {
-				int id = Integer.parseInt(parts[0]);
-				addTerm(id,parts[1]);
-			}	
+			if(line != null && !line.isEmpty()) {
+				String[] parts = line.split(";");	
+				if(parts.length == 2) {
+					int id = Integer.parseInt(parts[0]);
+					addTerm(id,parts[1]);
+				}	
+			}
+			
 		}
     }
     
@@ -55,13 +62,13 @@ public class TermStore {
 
     
     public void addTerm(int id, String name) {
-//        boolean is_mwe = name.contains("_") || name.contains(" ") || name.contains("-");
-        // must optimize research with regex or search algorithm which exploit the set of mwe word identifier characters
-
-        termsTrie.put(name,id);         
-        termsByIds.put(id, name);
-        total_term_size += name.length();
+	  	if(! termsTrie.containsKey(name)) {
+	  		 termsTrie.put(name,id);            	    
+	  	     total_term_size += name.length();
+	       	 termsByIds.put(id, name);
+	  	}
     }
+
 
 
     
@@ -76,15 +83,11 @@ public class TermStore {
     }
 
     
-    public int getTermsSize() {
+    public int getTotalSize() {
         return total_term_size;
     }
 
-    
-    public int getTermsLength() {
-        return termsByIds.size();
-    }
-
+  
 	public Collection<String> getTermsName() {
 		return termsTrie.keySet();
 	}

@@ -8,42 +8,34 @@ import org.json.JSONObject;
 import Store.RelationTypeStore;
 import Store.TermStore;
 
-public class RelationQuery {
 
-    private int x;
+/*
+ * Special of type of query (x, R : {r1,r2...rk}, T : {t1,t2,tl}} 
+ * Query used to search if some term x has any relation ri  with any term tj
+ *  equivalent to : 
+ * 		?x r_isa {animal,voiture,adv,autoroute}
+ *      ?x r_pos {animal,voiture,adv,autoroute}
+ *      ?x r_association {animal,voiture,adv,autoroute}
+ */
+public class FilteredQuery extends Query {
 
+    /** The set of terms */
     private Set<Long> term_searched;
+    
+    /** the set of relations */ 
+    private Set<Integer> relations_searched;
 
-    private boolean in,out;
 
-    public Set<Integer> relations_searched;
-
-
-    public RelationQuery(int x,Set<Long> term_searched, boolean in, boolean out, Set<Integer> relations_searched) {
-        this.x = x;
-        this.term_searched = term_searched;
-        this.in = in;
-        this.out = out;
+    public FilteredQuery(int x,Set<Long> term_searched, boolean in, boolean out, Set<Integer> relations_searched) {
+        super(x,in,out);
+    	this.term_searched = term_searched;      
         this.relations_searched = relations_searched;
     }
     
-
-    public int getX() {
-        return x;
-    }
-
     public Set<Long> getTerm_searched() {
         return term_searched;
     }
-
-    public boolean isIn() {
-        return in;
-    }
-
-    public boolean isOut() {
-        return out;
-    }
-
+    
     public Set<Integer> getRelations_searched() {
         return relations_searched;
     }
@@ -58,7 +50,7 @@ public class RelationQuery {
         		yTermsArray.put(termStore.getTermName((int)y_id));
         	}
     	}  	
-    	queryObj.put("moty", yTermsArray);
+    	queryObj.put("terms", yTermsArray);
     	
     	JSONArray predicatesArray = new JSONArray();
     	if(relations_searched != null){   		
@@ -66,10 +58,9 @@ public class RelationQuery {
         		predicatesArray.put(relationTypeStore.getName(r_id));
         	}
     	} 	
-    	queryObj.put("predicat", predicatesArray);
-    	
-    	queryObj.put("input",in ? "true" : "false");
-    	queryObj.put("output",out ? "true" : "false");
+    	queryObj.put("predicates", predicatesArray);   	
+    	queryObj.put("in",in ? "true" : "false");
+    	queryObj.put("out",out ? "true" : "false");
     	queryObj.put("format",format);
     	return queryObj.toString();
     }

@@ -1,7 +1,8 @@
 package Store;
 
 import core.Relation;
-import core.RelationQuery;
+import core.TreeQuery;
+import core.FilteredQuery;
 import requeterRezo.Filtre;
 import requeterRezo.Mot;
 import requeterRezo.RequeterRezoDump;
@@ -14,18 +15,22 @@ import java.util.*;
  * Class which handle the querying to JDM rezoDump 
  *
  */
-public class JDM_RelationStore {
+public class JDM_RelationStore implements RelationStore {
 
     private RequeterRezoDump requeterRezo;
-    
-    
     private TermStore termStore;
 
     public JDM_RelationStore(TermStore termStore){
-        requeterRezo = new RequeterRezoDump("4h","64Mo");
-        requeterRezo.viderCache();
+        requeterRezo = new RequeterRezoDump("24h","128Mo");
+//        requeterRezo.viderCache();
         this.termStore = termStore;
     }
+    
+	@Override
+	public Map<Integer, ArrayList<Relation>> query(TreeQuery query) throws Exception{
+		// TODO Auto-generated method stub
+		return null;
+	}
 
     
     /**
@@ -34,7 +39,7 @@ public class JDM_RelationStore {
      * @return a Map which associate to a relation_id each Relation which match to query
      * @throws Exception
      */
-    public Map<Integer, ArrayList<Relation>> query(RelationQuery query) {
+    public Map<Integer, ArrayList<Relation>> query(FilteredQuery query) throws Exception {
         long x = query.getX();
         String x_name = termStore.getTermName((int) x);
         if(x_name == null) {
@@ -63,6 +68,9 @@ public class JDM_RelationStore {
     				relation_filter.append(";"+it.next()); // build relation filter string for requeteMultiple
     			}
     			ArrayList<Mot> mots = requeterRezo.requeteMultiple(x_name, relation_filter.toString());
+    			if(mots == null || mots.isEmpty()) {
+    				return null;
+    			}
     			for(Mot mot : mots) {
     				query(mot,in,isOut,relations_searched,terms_searched,allRelations);   	
     			}
@@ -88,13 +96,17 @@ public class JDM_RelationStore {
     
     /**
      * SubMethod used to ease to querying according incoming and/or outcoming relation filtering
+     * 
      * @param mot the x word to search
      * @param in : true if incoming x relation are required
      * @param out : true if outgoing x relation are required
+     * 
      * @param relations_searched : the list of different relation like for all x r y | r belongs to relations_searched
      * if null, no filter is applied on relations
+     * 
      * @param terms_searched : the list of different term like for all x r y | y belongs to terms_searched
      * if null, no filter is applied on terms
+     * 
      * @param allRelations : Map which associate to a relation_id each Relation which match to query
      */
     private void query(Mot mot,
@@ -104,10 +116,10 @@ public class JDM_RelationStore {
     		HashMap<Integer, ArrayList<Relation>> allRelations) {
     	
 		if(in){
-            query(terms_searched,mot.getID(),false,mot.getRelations_entrantes(),allRelations);
+            queryFiltered(terms_searched,mot.getID(),false,mot.getRelations_entrantes(),allRelations);
         }
         if(out){
-            query(terms_searched,mot.getID(),true,mot.getRelations_sortantes(),allRelations);
+            queryFiltered(terms_searched,mot.getID(),true,mot.getRelations_sortantes(),allRelations);
         }
     }
 
@@ -119,7 +131,7 @@ public class JDM_RelationStore {
      * @param mapToQuery : the subset of x relation to check, could be set of incoming or outcoming relations for x 
      * @param allRelations : Map which associate to a relation_id each Relation which match to query
      */
-   private void query(
+   private void queryFiltered(
    		Set<Long> terms_searched, long x_id, 
    		boolean is_x_to_y_relation,
    		HashMap<Integer, ArrayList<Voisin>> mapToQuery,
@@ -158,5 +170,8 @@ public class JDM_RelationStore {
 
        }
    }
+
+
+
 
 }

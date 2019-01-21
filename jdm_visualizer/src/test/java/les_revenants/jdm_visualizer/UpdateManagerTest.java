@@ -3,7 +3,7 @@ package les_revenants.jdm_visualizer;
 import Store.*;
 import configuration.MasterStore;
 import core.Relation;
-import core.RelationQuery;
+import core.FilteredQuery;
 
 
 import static org.junit.Assert.*;
@@ -30,7 +30,7 @@ public class UpdateManagerTest {
     public static RelationTypeStore relationTypeStore;
 //    public static List<String> allEntries;
 
-    public static List<RelationQuery> queries,queries2;
+    public static List<FilteredQuery> queries,queries2;
     
     @BeforeClass
     public static void setUp() throws IOException, NumberFormatException, SQLException{
@@ -77,20 +77,20 @@ public class UpdateManagerTest {
         for(String word : words) {
         	for(String type : r_types) {
         		for(String term : y_terms) {
-        			RelationQuery q = queryFactory.create(word,Arrays.asList(term),Arrays.asList(type));
+        			FilteredQuery q = queryFactory.create(word,Arrays.asList(term),Arrays.asList(type));
         			if(q != null) {
             			queries2.add(q);
         			}
         		}       	     	
         	}
         }
-        List<RelationQuery> queriesCopy = new ArrayList<>(queries2);
-        queries2.addAll(queriesCopy);
+//        List<FilteredQuery> queriesCopy = new ArrayList<>(queries2);
+//        queries2.addAll(queriesCopy);
        
     }
 
 
-    private void testRunQueries(Collection<RelationQuery> workload) throws Exception{
+    private void testRunQueries(Collection<FilteredQuery> workload) throws Exception{
     	JDM_RelationStore inputStore = masterStore.getInputStore();
     	Neo4J_RelationStore writeStore = masterStore.getPersistentStore();
     	writeStore.reset();
@@ -103,7 +103,7 @@ public class UpdateManagerTest {
         	 total_neo4j_querying_time = 0,
         	 insert_time = 0, query_time = 0;
         
-    	for(RelationQuery query : workload){
+    	for(FilteredQuery query : workload){
     		
     		t1 = Instant.now();
     		Map<Integer,ArrayList<Relation>> results = masterStore.query(query);
@@ -157,20 +157,22 @@ public class UpdateManagerTest {
    public void testQueries() throws Exception {
 //	   testRunQueries(queries,false);
 //	   testRunQueries(queries,true);
-       testRunQueries(queries2);
+//       testRunQueries(queries2);
    }
   
     
-//   @Test
-//   public void testJSON() throws Exception{
-//	    System.out.println("TEST_JSON");
-//		RelationQuery q1 = queries.get(1);
-//		String q1JSON = q1.asJSON(termStore, relationTypeStore,"grouped");
-//		System.out.println(q1JSON);	
-//		
-//		String q1ResultsJSON = masterStore.query(q1JSON);
-//		System.out.println(q1ResultsJSON);
-//   }
+   @Test
+   public void testJSON() throws Exception{
+	    System.out.println("TEST_JSON");
+	    for(FilteredQuery q : queries) {
+	    	String q1JSON = q.asJSON(termStore, relationTypeStore,"grouped");
+			System.out.println(q1JSON);			
+			String q1ResultsJSON = masterStore.query(q1JSON);
+			System.out.println(q1ResultsJSON);
+	    }
+//		FilteredQuery q1 = queries.get(1);
+		
+   }
 
     public static int nbResult(Map<Integer,ArrayList<Relation>> results){
         if(results == null)

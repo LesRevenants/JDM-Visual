@@ -1,7 +1,7 @@
 package Store;
 
 import core.Relation;
-import core.RelationQuery;
+import core.FilteredQuery;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -124,7 +124,7 @@ public class Neo4J_RelationStore {
      * @throws Exception
      */
     
-    public Map<Integer, ArrayList<Relation>> query(RelationQuery query) throws Exception {
+    public Map<Integer, ArrayList<Relation>> query(FilteredQuery query) throws Exception {
 		long x = query.getX();   
 		String x_name = termStore.getTermName((int) x);
 		if(x_name == null) {

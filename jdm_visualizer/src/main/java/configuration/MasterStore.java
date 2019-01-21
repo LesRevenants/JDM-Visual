@@ -2,8 +2,10 @@ package configuration;
 
 import Store.*;
 import core.Relation;
-import core.RelationQuery;
+import core.FilteredQuery;
 import core.RelationQueryFactory;
+import core.TreeQuery;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,30 +19,23 @@ import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class MasterStore {
+public class MasterStore implements RelationStore{
 
   
     
-    /**
-     * The JDM network entry point
-     */
+    /** The JDM network entry point */
     private JDM_RelationStore inputStore;
     
-    /**
-     * The Neo4J DB used for store new relationships
-     */
+    /** The Neo4J DB used for store new relationships */
     private Neo4J_RelationStore persistentStore;
     
-	private HashSet<Integer> termWithRelationsInDB,termBuffer;	
+    /** The set of terms for which relation are stored into DB */
+	private HashSet<Integer> termWithRelationsInDB;	
     
-    /**
-     * The in memory termStore
-     */
+    /** The in memory termStore */
     private TermStore termStore;
     
-    /**
-     * The in memory RelationType Store
-     */
+    /**The in memory RelationType Store  */
     private RelationTypeStore relationTypeStore;
       
  
@@ -66,7 +61,7 @@ public class MasterStore {
 		termStore = new TermStore(serialized_terms_path);
 		logger.info("MemoryTermStore init[OK]");
 			
-		String relationsTypePath = memoryObj.getString("relations");									
+		String relationsTypePath = memoryObj.getString("relation_types");									
 		relationTypeStore = new RelationTypeStore(relationsTypePath);
 		logger.info("RelationTypeStore init[OK]");
 				
@@ -81,7 +76,6 @@ public class MasterStore {
         logger.info("JDM store building [OK]");
         
         termWithRelationsInDB = new HashSet<>();
-        termBuffer = new HashSet<>();	
         queryFactory  = new RelationQueryFactory(termStore, relationTypeStore);
              
     }
@@ -104,33 +98,33 @@ public class MasterStore {
 		return relationTypeStore;
 	}
     
-    /**
-     * 
-     * @param query
-     * @return
-     * @throws Exception
-     */
-    public Map<Integer, ArrayList<Relation>> query(RelationQuery query) throws Exception {
+    
+    @Override
+    public Map<Integer, ArrayList<Relation>> query(FilteredQuery query) throws Exception {
     	int xId = query.getX();
     	if(termWithRelationsInDB.contains(xId)) {
     		return persistentStore.query(query); 		
-    	}
-    	String query_x_name = termStore.getTermName(query.getX());
-    	RelationQuery getAllX = queryFactory.create(query_x_name);   	
-    	Map<Integer, ArrayList<Relation>> results = inputStore.query(getAllX);
-    	
-    	if(results != null) {
-    		boolean askPersistent = applyUpdateStrategy(xId,results);
-        	if(askPersistent) {
-        		persistentStore.insert(results);
-        		persistentStore.flush();
-        		termWithRelationsInDB.add(xId);    		
-        	} 	 
-    	}
+    	}	
+    	Map<Integer, ArrayList<Relation>> results = inputStore.query(query);
     	return results;
+//    	if(results != null) {
+//    		boolean askPersistent = applyUpdateStrategy(xId,results);
+//        	if(askPersistent) {
+//        		persistentStore.insert(results);
+//        		persistentStore.flush();
+//        		termWithRelationsInDB.add(xId);    		
+//        	} 	 
+//    	}
     		
     }
     
+    
+
+	@Override
+	public Map<Integer, ArrayList<Relation>> query(TreeQuery query) {
+		// TODO Auto-generated method stub
+		return null;
+	}
    
     
     /**
@@ -146,10 +140,10 @@ public class MasterStore {
 		JSONObject rootObj =  new JSONObject(stringJSON);
 		
 		String x = rootObj.getString("motx");
-		JSONArray predicatesArray = rootObj.getJSONArray("predicat");
-		JSONArray yTermsArray = rootObj.getJSONArray("moty");
-		Boolean isIn = Boolean.parseBoolean(rootObj.getString("input"));
-		Boolean isOut= Boolean.parseBoolean(rootObj.getString("output"));
+		JSONArray predicatesArray = rootObj.getJSONArray("predicates");
+		JSONArray yTermsArray = rootObj.getJSONArray("terms");
+		Boolean isIn = Boolean.parseBoolean(rootObj.getString("in"));
+		Boolean isOut= Boolean.parseBoolean(rootObj.getString("out"));
 		String format = rootObj.getString("format");
 
 		List<String> relationsSearched = new ArrayList<>(predicatesArray.length());
@@ -161,7 +155,7 @@ public class MasterStore {
 			yTerms.add(yTermsArray.getString(i));
 		}
 		
-		RelationQuery query = queryFactory.create(x,yTerms,isIn,isOut,relationsSearched);
+		FilteredQuery query = queryFactory.create(x,yTerms,isIn,isOut,relationsSearched);
 		Map<Integer, ArrayList<Relation>> queryResults = query(query);
     	return buildJsonContent(queryResults, format);
     }
@@ -194,6 +188,9 @@ public class MasterStore {
     			}
     			break;
     		}
+    		case "sorted": {
+    			
+    		}
     		default : {
     			break;
     		}
@@ -206,6 +203,9 @@ public class MasterStore {
     private boolean applyUpdateStrategy(int xId,Map<Integer, ArrayList<Relation>> results) {    	
     	return true;
     }
+
+
+
     
    
     

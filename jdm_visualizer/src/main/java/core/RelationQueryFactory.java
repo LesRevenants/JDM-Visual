@@ -16,16 +16,16 @@ public class RelationQueryFactory {
 		this.relationTypeStore = relationTypeStore;
 	}
 	
-	public RelationQuery create(String x_word) {
+	public FilteredQuery create(String x_word) {
 		Integer x_id = termStore.getTermId(x_word);
 		if(x_id == null) {
 			return null;
 		}
-		RelationQuery query = new RelationQuery(x_id, null, true,true, null);
+		FilteredQuery query = new FilteredQuery(x_id, null, true,true, null);
 		return query;
 	}
 	
-	public RelationQuery create(String x_word,List<String> term_searched, boolean in, boolean out, List<String> relations_searched) {
+	public FilteredQuery create(String x_word,List<String> term_searched, boolean in, boolean out, List<String> relations_searched) {
 		Integer x_id = termStore.getTermId(x_word);
 		if(x_id == null) {
 			return null;
@@ -48,11 +48,11 @@ public class RelationQueryFactory {
 				}
 			}
 		}
-		RelationQuery relationQuery = new RelationQuery(x_id, term_ids, in, out, relation_ids);
+		FilteredQuery relationQuery = new FilteredQuery(x_id, term_ids, in, out, relation_ids);
 		return relationQuery;
 	}
 	
-	public RelationQuery create(String x_word,List<String> term_searched, List<String> relations_searched) {
+	public FilteredQuery create(String x_word,List<String> term_searched, List<String> relations_searched) {
 		return create(x_word,term_searched,true,true,relations_searched);
 	}
 }
