@@ -5,6 +5,8 @@ import core.FilteredQuery;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +27,8 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.kernel.impl.api.index.UpdateMode;
 import org.neo4j.graphdb.RelationshipType;
 
@@ -360,5 +364,45 @@ public class Neo4J_RelationStore {
 	public boolean isFlushed() {
 		return relationBuffer.isEmpty();
 	}
+	
+    public void insertNodes() {
+    	
+    	Instant t1 = Instant.now();
+    	
+		Map<String,Integer> map = termStore.getTermIndex();
+    	Iterator<Map.Entry<String, Integer>> it = map.entrySet().iterator();   	
+		int BATCH_SIZE = 65536*4;
+    	int n = map.size() % BATCH_SIZE == 0 ? map.size()/BATCH_SIZE : (map.size()/BATCH_SIZE)+1;
+    	
+    	IndexManager index;
+    	Index<Node> termIndex;
+    	
+    	try ( Transaction tx = graph.beginTx() ){  
+    		index = graph.index();
+            termIndex = index.forNodes("terms");
+            tx.success();
+    	}   	
+        
+    	for(int i=0;i<n && it.hasNext();i++) {
+    		try ( Transaction tx = graph.beginTx() ){  
+    			
+    			for(int j=0;j<BATCH_SIZE && it.hasNext();j++) {
+    				Map.Entry<String, Integer> pair = it.next();
+    				Node node = graph.createNode(termLabel);
+        			node.setProperty("id",pair.getValue());
+        			node.setProperty("name", pair.getKey());
+        			termIndex.add(node, "name", node.getProperty("name"));
+        			termIndex.add(node, "id", node.getProperty("id"));
+    			}
+    			tx.success();
+    		}
+    	}
+    	
+    	long ellapsedMs = Duration.between(t1, Instant.now()).toMillis();
+    	logger.info(map.size()+" terms inserted [time="+ellapsedMs+"ms");
+
+    	
+    }
+    
 	
 }

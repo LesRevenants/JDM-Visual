@@ -12,7 +12,9 @@ public class App {
 
 	public static void help() {
 		System.out.println("mode config_file");
-		System.out.println("mode: --start\n\t port");
+		System.out.println("mode: \n\t--start: port");
+		System.out.println("mode: \n\t--init: data_dir");
+
 	}
 	
 	public static void main(String[] args) throws Exception {
@@ -25,7 +27,12 @@ public class App {
 		
 		MasterStore masterStore = new MasterStore(config_file);
 		if(mode.equals("--init")) {
-			
+			if(args.length < 3 ) {
+				help();
+				return;
+			}
+			String dataDirPath = args[2];
+			masterStore.init(dataDirPath);
 		}
 		else if(mode.equals("--update")) {
 			

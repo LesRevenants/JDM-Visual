@@ -6,6 +6,7 @@ import core.FilteredQuery;
 import core.RelationQueryFactory;
 import core.TreeQuery;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -80,7 +81,16 @@ public class MasterStore implements RelationStore{
              
     }
     
-  
+    public void init(String dataDirPath) {
+    	File dir = new File(dataDirPath);
+    	if(! dir.isDirectory()) {
+    		logger.severe("Error "+dataDirPath+" is not a directory");
+    	}
+//    	persistentStore.insertNodes();
+//    	for(File file : dir.listFiles()) {
+//    		
+//    	}
+    }
     
     public JDM_RelationStore getInputStore() {
 		return inputStore;

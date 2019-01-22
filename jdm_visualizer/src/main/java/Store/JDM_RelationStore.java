@@ -9,6 +9,7 @@ import requeterRezo.RequeterRezoDump;
 import requeterRezo.Voisin;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 
 /**
@@ -21,16 +22,62 @@ public class JDM_RelationStore implements RelationStore {
     private TermStore termStore;
 
     public JDM_RelationStore(TermStore termStore){
-        requeterRezo = new RequeterRezoDump("24h","128Mo");
+        requeterRezo = new RequeterRezoDump("96h","128Mo");
 //        requeterRezo.viderCache();
         this.termStore = termStore;
     }
     
 	@Override
 	public Map<Integer, ArrayList<Relation>> query(TreeQuery query) throws Exception{
-		// TODO Auto-generated method stub
-		return null;
+		long x = query.getX();
+        String x_name = termStore.getTermName((int) x);
+        if(x_name == null) {
+        	return null;
+        }
+
+        HashMap<Integer, ArrayList<Relation>> allRelations = new HashMap<>();       
+        HashMap<Long,Set<Long>> patterns = query.getPatterns();
+//        boolean are_relation_filtered = ;
+        boolean in = query.isIn();
+        boolean isOut = query.isOut();
+
+        Filtre filtre = (in && isOut) ? Filtre.FiltreNull :  // use JDM filter for incoming/outcoming relations
+        	( (!in) ? Filtre.FiltreRelationsEntrantes : Filtre.FiltreRelationsSortantes);
+        if(! patterns.isEmpty()) {   
+        	StringBuilder relation_filter = new StringBuilder(); // the relation filter send to requterRezo.requeteMultiple() as str
+        	Iterator<Entry<Long,Set<Long>>> it = patterns.entrySet().iterator();
+        	Long firstRelation = it.next().getKey();
+        	relation_filter.append(firstRelation);
+//    		
+    		if(patterns.size() > 1) {
+    			while(it.hasNext()) {
+    				relation_filter.append(";"+it.next()); // build relation filter string for requeteMultiple
+    			}
+    			ArrayList<Mot> mots = requeterRezo.requeteMultiple(x_name, relation_filter.toString());
+    			if(mots != null && ! mots.isEmpty()) {
+    				for(Mot mot : mots) {
+//        				queryFiltered(mot,in,isOut,relations_searched,terms_searched,allRelations);   	
+        			}    			
+    			}
+//    			
+//    		}
+    		}
+    		else {
+    			Mot mot = requeterRezo.requete(x_name,relation_filter.toString(),filtre);
+            	if(mot != null) {            		
+        			queryFiltered(mot,in,isOut,patterns.get(firstRelation),allRelations);   			
+    			}
+    		}
+        }
+        else {
+        	Mot mot = requeterRezo.requete(x_name,filtre);
+        	if(mot != null) {
+            	queryFiltered(mot,in,isOut,null,allRelations);  
+        	}
+        }
+        return allRelations;
 	}
+	
 
     
     /**
@@ -40,13 +87,13 @@ public class JDM_RelationStore implements RelationStore {
      * @throws Exception
      */
     public Map<Integer, ArrayList<Relation>> query(FilteredQuery query) throws Exception {
+    	HashMap<Integer, ArrayList<Relation>> allRelations = new HashMap<>();
         long x = query.getX();
         String x_name = termStore.getTermName((int) x);
         if(x_name == null) {
-        	return null;
+        	return allRelations;
         }
-
-        HashMap<Integer, ArrayList<Relation>> allRelations = new HashMap<>();
+   
         Set<Integer> relations_searched = query.getRelations_searched();
         Set<Long> terms_searched = query.getTerm_searched();
 
@@ -68,27 +115,25 @@ public class JDM_RelationStore implements RelationStore {
     				relation_filter.append(";"+it.next()); // build relation filter string for requeteMultiple
     			}
     			ArrayList<Mot> mots = requeterRezo.requeteMultiple(x_name, relation_filter.toString());
-    			if(mots == null || mots.isEmpty()) {
-    				return null;
+    			if(mots != null && ! mots.isEmpty()) {
+    				for(Mot mot : mots) {
+        				queryFiltered(mot,in,isOut,terms_searched,allRelations);   	
+        			}    			
     			}
-    			for(Mot mot : mots) {
-    				query(mot,in,isOut,relations_searched,terms_searched,allRelations);   	
-    			}
+    			
     		}
     		else { // search only one relation
     			Mot mot = requeterRezo.requete(x_name,relation_filter.toString(),filtre);
-    			if(mot == null) {
-    				return null;
+            	if(mot != null) {
+        			queryFiltered(mot,in,isOut,terms_searched,allRelations);   			
     			}
-    			query(mot,in,isOut,relations_searched,terms_searched,allRelations);   			
     		}
         }
         else { // no particular relation searched
         	Mot mot = requeterRezo.requete(x_name,filtre);
-        	if(mot == null) {
-        		return null;
+        	if(mot != null) {
+            	queryFiltered(mot,in,isOut,terms_searched,allRelations);  
         	}
-        	query(mot,in,isOut,relations_searched,terms_searched,allRelations);  
         }
 
         return allRelations;
@@ -109,9 +154,8 @@ public class JDM_RelationStore implements RelationStore {
      * 
      * @param allRelations : Map which associate to a relation_id each Relation which match to query
      */
-    private void query(Mot mot,
-    		boolean in, boolean out,
-    		Set<Integer> relations_searched, 	
+    private void queryFiltered(Mot mot,
+    		boolean in, boolean out,	
     		Set<Long> terms_searched,
     		HashMap<Integer, ArrayList<Relation>> allRelations) {
     	
@@ -169,6 +213,10 @@ public class JDM_RelationStore implements RelationStore {
            }
 
        }
+   }
+   
+   private void queryTree() {
+	   
    }
 
 
