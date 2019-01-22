@@ -70,8 +70,8 @@ public class MasterStore implements RelationStore{
 		JSONObject storeObj = persistentObj.getJSONObject("stores");
 		JSONObject neo4jObj = storeObj.getJSONObject("Neo4j");
 
-		persistentStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
-        logger.info("Neo4J store building [OK]");		
+//		persistentStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
+//        logger.info("Neo4J store building [OK]");		
             
     	inputStore = new JDM_RelationStore(termStore);
         logger.info("JDM store building [OK]");
@@ -152,8 +152,8 @@ public class MasterStore implements RelationStore{
 		String x = rootObj.getString("motx");
 		JSONArray predicatesArray = rootObj.getJSONArray("predicates");
 		JSONArray yTermsArray = rootObj.getJSONArray("terms");
-		Boolean isIn = Boolean.parseBoolean(rootObj.getString("in"));
-		Boolean isOut= Boolean.parseBoolean(rootObj.getString("out"));
+		Boolean isIn = ! Boolean.parseBoolean(rootObj.getString("in"));
+		Boolean isOut= ! Boolean.parseBoolean(rootObj.getString("out"));
 		String format = rootObj.getString("format");
 
 		List<String> relationsSearched = new ArrayList<>(predicatesArray.length());

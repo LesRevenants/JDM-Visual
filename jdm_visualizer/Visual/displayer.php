@@ -11,12 +11,12 @@ if($_POST['output'] == "on") $_POST['output'] = "true";
 else { $_POST['output'] = "false"; }
 if($_POST['input'] == "on") $_POST['input'] = "true";
 else { $_POST['input'] = "false"; }
-$content = "{";
-	$content .= "".'"motx":"';
+$content = "\n\t{\n\t\t";
+	$content .= "\n\t\t\t".'"motx":"';
 	$content .= $_POST["motx"] . '",';
 
 	if(strpos($_POST["predicat"], ',') !== false) {
-		$content .= ""."\"predicates\":[";
+		$content .= "\n\t\t\t"."\"predicat\":[";
 		$predicat = explode(',',$_POST["predicat"]);
 		foreach($predicat as $a) {
 			$content .= "\"".$a."\",";
@@ -25,11 +25,11 @@ $content = "{";
 		$content .= "],";
 	}
 	else {
-	$content .= ""."\"predicates\":";
+	$content .= "\n\t\t\t"."\"predicat\":";
 	$content .= "[\"" . $_POST["predicat"] . '"],'; }
 	
 		if(strpos($_POST["moty"], ',') !== false) {
-		$content .= ""."\"terms\":[";
+		$content .= "\n\t\t\t"."\"moty\":[";
 		$predicat = explode(',',$_POST["moty"]);
 		foreach($predicat as $a) {
 			$content .= "\"".$a."\",";
@@ -37,26 +37,27 @@ $content = "{";
 		$content = substr($content, 0, -1);
 		$content .= "],"; }
 	else {	
-	$content .= ""."\"terms\":";
+	$content .= "\n\t\t\t"."\"moty\":\"";
 	$content .= "[\"" . $_POST['moty'] . '"],';
 	}
-	$content .= ""."\"in\":\"";
+	$content .= "\n\t\t\t"."\"input\":\"";
 	$content .= $_POST['input'] . '",';
-	$content .= ""."\"out\":\"";
-	$content .= $_POST['output'] . '",';
-	$content .= ""."\"format\":\"";
-	$content .= "grouped" . '"'. "}";
+	$content .= "\n\t\t\t"."\"output\":\"";
+	$content .= $_POST['output'] . '"'. "\n\n\t}";
 echo $content;
-
-try {
- $out = phpClient($content);   //exec("java -jar ready.jar {$arg}", $output);
+$js = fopen("json/query.json", "w+") or die("can't open file");
+fwrite($js, $content);
+fclose($js);
+/*try {
+ $out = phpClient($arg);   //exec("java -jar ready.jar {$arg}", $output);
+ echo $out;
 } catch (Exception $e) { echo "yolo"; }
 $outpute = explode("@", $out);
 $output = explode("\n", $outpute[0]);
 $other = $outpute[1];
 
 function phpClient($arg) {
- $PORT = 9503; //the port on which we are connecting to the "remote" machine
+ $PORT = 8000; //the port on which we are connecting to the "remote" machine
  $HOST = "localhost"; //the ip of the remote machine (in this case it's the same machine)
  
  $sock = socket_create(AF_INET, SOCK_STREAM, 0) //Creating a TCP socket
@@ -70,6 +71,6 @@ socket_write($sock, $text . "\n", strlen($text) + 1) //Writing the text to the s
        or die("error: failed to write to socket\n");
 $reply = socket_read($sock, 100000) //Reading the reply from socket
         or die("error: failed to read from socket\n");
-  return $reply; }
+  return $reply; }*/
 
 ?>

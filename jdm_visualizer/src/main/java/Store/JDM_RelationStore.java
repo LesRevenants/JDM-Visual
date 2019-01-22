@@ -108,7 +108,8 @@ public class JDM_RelationStore implements RelationStore {
         if(are_relation_filtered) {   
         	StringBuilder relation_filter = new StringBuilder(); // the relation filter send to requterRezo.requeteMultiple() as str
     		Iterator<Integer> it = relations_searched.iterator();
-    		relation_filter.append(it.next());
+    		Integer first_relation = it.next();
+    		relation_filter.append(first_relation);
     		
     		if(relations_searched.size() > 1) {
     			while(it.hasNext()) {
@@ -123,7 +124,7 @@ public class JDM_RelationStore implements RelationStore {
     			
     		}
     		else { // search only one relation
-    			Mot mot = requeterRezo.requete(x_name,relation_filter.toString(),filtre);
+    			Mot mot = requeterRezo.requete(x_name,first_relation,filtre);
             	if(mot != null) {
         			queryFiltered(mot,in,isOut,terms_searched,allRelations);   			
     			}
