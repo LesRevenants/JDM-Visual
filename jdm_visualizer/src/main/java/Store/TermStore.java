@@ -36,8 +36,8 @@ public class TermStore {
     	List<String> lines = Files.readAllLines(Paths.get(filePath),StandardCharsets.ISO_8859_1);
 		for(String line : lines) {
 			if(line != null && !line.isEmpty()) {
-				String[] parts = line.split(";");	
-				if(parts.length == 2) {
+				String[] parts = line.split(",");	
+				if(parts.length == 3) {
 					int id = Integer.parseInt(parts[0]);
 					addTerm(id,parts[1]);
 				}	
@@ -46,22 +46,22 @@ public class TermStore {
 		}
     }
     
-    public TermStore(Collection<String> names, Collection<Integer> ids) {
-    	this();
-    	assert(names.size() == ids.size());
-    	Iterator<String> namesIt = names.iterator();
-    	Iterator<Integer> idsIt = ids.iterator();
-    	while(namesIt.hasNext() && idsIt.hasNext()) {
-    		Integer id = idsIt.next();
-    		String name = namesIt.next();
-    		addTerm(id,name);
-    	}
-    }
+//    public TermStore(Collection<String> names, Collection<Integer> ids) {
+//    	this();
+//    	assert(names.size() == ids.size());
+//    	Iterator<String> namesIt = names.iterator();
+//    	Iterator<Integer> idsIt = ids.iterator();
+//    	while(namesIt.hasNext() && idsIt.hasNext()) {
+//    		Integer id = idsIt.next();
+//    		String name = namesIt.next();
+//    		addTerm(id,name);
+//    	}
+//    }
     
     
 
     
-    public void addTerm(int id, String name) {
+    public void addTerm(Integer id, String name) {
 	  	if(! termsTrie.containsKey(name)) {
 	  		 termsTrie.put(name,id);            	    
 	  	     total_term_size += name.length();
