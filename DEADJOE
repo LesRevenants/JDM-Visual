@@ -1,0 +1,21 @@
+
+*** These modified files were found in JOE when it aborted on Tue Jan 22 16:44:25 2019
+*** JOE was aborted by UNIX signal 15
+
+*** Fichier '/auto_home/rcolin/workspace/JDM-Visual/.git/MERGE_MSG'
+Merge branch 'master' of https://github.com/LesRevenants/JDM-Visual
+
+# Veuillez
+ entrer un message de validation pour expliquer en quoi cette fusion est
+# nécessaire, surtout si cela fusionne une branche amont mise à jour dans une branche de sujet.
+#
+# Les lignes commençant par '#' seront ignorées, et un message vide
+# abandonne la validation.
+
+*** Fichier '(Sans nom)'
+/auto_home/rcolin/workspace/JDM-Visual/.git/MERGE_MSG
+/auto_home/rcolin/workspace/JDM-Visual/.git/MERGE_MSG
+
+*** Fichier '* Startup Log *'
+Traitement de '/etc/joe/editorrc'...Traitement de '/etc/joe/ftyperc'...Finished processing /etc/joe/ftyperc
+Finished processing /etc/joe/editorrc
