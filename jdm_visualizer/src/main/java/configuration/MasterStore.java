@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -75,16 +74,19 @@ public class MasterStore implements RelationStore{
     				if(parts.length == 3) {
     					Integer id = Integer.parseInt(parts[0]);
     					Boolean isCached = Boolean.parseBoolean(parts[2]);
-    					termStore.addTerm(id,parts[1]);
+    					String name = parts[1].replace("\\", "");  					
+    					termStore.addTerm(id,name);
     					if(isCached){
-    						//cacheManager.addTerm(id);
+    						cacheManager.addTerm(id);
     					}
     				}	
     			}
         	}
         }
-	
-		logger.info("MemoryTermStore init[OK] "+lines.size()+"terms read, "+cacheManager.getNbTermCached()+" terms cached");
+        termStore.resolveAmbiguity();
+		logger.info("MemoryTermStore init[OK] "+lines.size()+"terms read");
+		logger.info("\t"+cacheManager.getNbTermCached()+" terms cached,");
+		logger.info("\t"+termStore.getResolvedAmbiguityNb()+"/"+termStore.getUnresolvedAmbiguityNb()+" ambiguity resolved/unresolved");
 			
 		String relationsTypePath = memoryObj.getString("relation_types");									
 		relationTypeStore = new RelationTypeStore(relationsTypePath);
@@ -104,14 +106,7 @@ public class MasterStore implements RelationStore{
     }
     
     public void init(String dataDirPath) {
-    	File dir = new File(dataDirPath);
-    	if(! dir.isDirectory()) {
-    		logger.severe("Error "+dataDirPath+" is not a directory");
-    	}
-//    	persistentStore.insertNodes();
-//    	for(File file : dir.listFiles()) {
-//    		
-//    	}
+    	neo4jStore.insertNodes();
     }
     
     public JDM_RelationStore getInputStore() {

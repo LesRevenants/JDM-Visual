@@ -9,12 +9,23 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class TermStore {
 
     private PatriciaTrie<Integer> termsTrie;
+    
+    /** Associate to each ambigous term the list of semantic raffinement term id
+     *  ex : (avocat, id=104789) -> { 157204: 71637 (justice) , .}
+     *  */ 
+    private HashMap<Integer,HashMap<Integer,Integer>> ambiguity;
+    
+    private PatriciaTrie<HashMap<Integer,Integer>> tmpAmbiguity;
+    
+    private int resolvedAmbiguityNb, unresolvedAmbiguityNb;
+    
     private int total_term_size;
 
     /** Map integer id to  */
@@ -23,7 +34,8 @@ public class TermStore {
 
     public TermStore(){
         termsTrie = new PatriciaTrie<>();
-        termsByIds = new HashMap<>();
+        termsByIds = new HashMap<>();     
+        tmpAmbiguity = new PatriciaTrie<>();
     }
 
   
@@ -46,6 +58,19 @@ public class TermStore {
 		}
     }
     
+    public void resolveAmbiguity(){
+    	if(tmpAmbiguity.isEmpty()){
+    		return;
+    	}
+    	resolvedAmbiguityNb = 0;
+    	ambiguity = new HashMap<>();
+    	for(String term : tmpAmbiguity.keySet()){ 	
+    		ambiguity.put(termsTrie.get(term), tmpAmbiguity.get(term));		
+    		resolvedAmbiguityNb += tmpAmbiguity.get(term).size();
+    	}
+    	tmpAmbiguity.clear();
+    }
+    
 //    public TermStore(Collection<String> names, Collection<Integer> ids) {
 //    	this();
 //    	assert(names.size() == ids.size());
@@ -62,10 +87,35 @@ public class TermStore {
 
     
     public void addTerm(Integer id, String name) {
+    	
 	  	if(! termsTrie.containsKey(name)) {
 	  		 termsTrie.put(name,id);            	    
 	  	     total_term_size += name.length();
 	       	 termsByIds.put(id, name);
+
+	       	 int ambiguityIdx = name.indexOf('>');
+	       	 if(ambiguityIdx != -1){
+	       		 String termName = name.substring(0,ambiguityIdx);  
+	       		 if(! termName.isEmpty()){
+	       			 
+	       			 String ambigiousTerm = name.substring(ambiguityIdx+1);
+		       		 int recursiveAmbiguityIdx = ambigiousTerm.indexOf('>');
+		       		 if(recursiveAmbiguityIdx == -1){
+		       			 try{
+		       				Integer refTermId = Integer.parseInt(ambigiousTerm);
+				       		tmpAmbiguity.putIfAbsent(termName, new HashMap<>());
+				       		tmpAmbiguity.get(termName).put(id, refTermId);
+		       			 }
+		       			 catch(NumberFormatException e){
+		       				 unresolvedAmbiguityNb++;		       			
+		       			 }
+		       			
+		       		 }
+		       		 else{
+		       			   unresolvedAmbiguityNb++;
+		       		 }
+	       		 }	       		     		 
+	       	 }
 	  	}
     }
 
@@ -108,6 +158,20 @@ public class TermStore {
 	public String getTermName(int termId) {
 		return termsByIds.get(termId);
 	}
+
+
+	public int getResolvedAmbiguityNb() {
+		return resolvedAmbiguityNb;
+	}
+
+
+	public int getUnresolvedAmbiguityNb() {
+		return unresolvedAmbiguityNb;
+	}
+	
+	
+	
+	
 
 
 }

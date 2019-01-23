@@ -15,7 +15,8 @@ public class CacheManager {
 	}
 	
 	public boolean isCached(Integer termId){
-		return cachedTerms.contains(termId);
+//		return cachedTerms.contains(termId);
+		return false;
 	}
 	
 	public int getNbTermCached(){
