@@ -8,11 +8,12 @@ import core.TreeQuery;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -25,13 +26,13 @@ public class MasterStore implements RelationStore{
   
     
     /** The JDM network entry point */
-    private JDM_RelationStore inputStore;
+    private JDM_RelationStore jdmStore;
     
     /** The Neo4J DB used for store new relationships */
-    private Neo4J_RelationStore persistentStore;
+    private Neo4J_RelationStore neo4jStore;
     
     /** The set of terms for which relation are stored into DB */
-	private HashSet<Integer> termWithRelationsInDB;	
+    private CacheManager cacheManager;
     
     /** The in memory termStore */
     private TermStore termStore;
@@ -59,8 +60,33 @@ public class MasterStore implements RelationStore{
 		JSONObject memoryObj = rootObj.getJSONObject("memory");
 		String serialized_terms_path = memoryObj.getString("terms");
 		
-		termStore = new TermStore(serialized_terms_path);
-		logger.info("MemoryTermStore init[OK]");
+		termStore = new TermStore();
+		cacheManager = new CacheManager();
+	        
+        List<String> lines = Files.readAllLines(Paths.get(serialized_terms_path),StandardCharsets.ISO_8859_1);
+        Iterator<String> it = lines.iterator();
+        if(it.hasNext()){
+        	it.next(); // split first csv line
+        	while(it.hasNext()){
+        		String line = it.next();
+        		if(line != null && !line.isEmpty()) {
+    				String[] parts = line.split(",");	
+    				if(parts.length == 3) {
+    					Integer id = Integer.parseInt(parts[0]);
+    					Boolean isCached = Boolean.parseBoolean(parts[2]);
+    					String name = parts[1].replace("\\", "");  					
+    					termStore.addTerm(id,name);
+    					if(isCached){
+    						cacheManager.addTerm(id);
+    					}
+    				}	
+    			}
+        	}
+        }
+        termStore.resolveAmbiguity();
+		logger.info("MemoryTermStore init[OK] "+lines.size()+"terms read");
+		logger.info("\t"+cacheManager.getNbTermCached()+" terms cached,");
+		logger.info("\t"+termStore.getResolvedAmbiguityNb()+"/"+termStore.getUnresolvedAmbiguityNb()+" ambiguity resolved/unresolved");
 			
 		String relationsTypePath = memoryObj.getString("relation_types");									
 		relationTypeStore = new RelationTypeStore(relationsTypePath);
@@ -70,34 +96,25 @@ public class MasterStore implements RelationStore{
 		JSONObject storeObj = persistentObj.getJSONObject("stores");
 		JSONObject neo4jObj = storeObj.getJSONObject("Neo4j");
 
-//		persistentStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
-//        logger.info("Neo4J store building [OK]");		
+		neo4jStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
+        logger.info("Neo4J store building [OK]");		
             
-    	inputStore = new JDM_RelationStore(termStore);
-        logger.info("JDM store building [OK]");
-        
-        termWithRelationsInDB = new HashSet<>();
+    	jdmStore = new JDM_RelationStore(termStore);
+
         queryFactory  = new RelationQueryFactory(termStore, relationTypeStore);
              
     }
     
     public void init(String dataDirPath) {
-    	File dir = new File(dataDirPath);
-    	if(! dir.isDirectory()) {
-    		logger.severe("Error "+dataDirPath+" is not a directory");
-    	}
-//    	persistentStore.insertNodes();
-//    	for(File file : dir.listFiles()) {
-//    		
-//    	}
+    	neo4jStore.insertNodes();
     }
     
     public JDM_RelationStore getInputStore() {
-		return inputStore;
+		return jdmStore;
 	}
 
 	public Neo4J_RelationStore getPersistentStore() {
-		return persistentStore;
+		return neo4jStore;
 	}
 
 	public TermStore getTermStore() {
@@ -112,10 +129,16 @@ public class MasterStore implements RelationStore{
     @Override
     public Map<Integer, ArrayList<Relation>> query(FilteredQuery query) throws Exception {
     	int xId = query.getX();
-    	if(termWithRelationsInDB.contains(xId)) {
-    		return persistentStore.query(query); 		
-    	}	
-    	Map<Integer, ArrayList<Relation>> results = inputStore.query(query);
+    	if(cacheManager.isCached(xId)) {
+    		logger.info(query.toString()+"[CACHED]");
+    		Map<Integer, ArrayList<Relation>> results = neo4jStore.query(query); 
+    		logger.info(query.toString()+"[OK]");
+    		return results;
+    	}
+		logger.info(query.toString()+"[UNCACHED]");
+    	Map<Integer, ArrayList<Relation>> results = jdmStore.query(query);
+		logger.info(query.toString()+"[OK]");
+
     	return results;
 //    	if(results != null) {
 //    		boolean askPersistent = applyUpdateStrategy(xId,results);

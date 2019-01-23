@@ -1,6 +1,6 @@
 {
 	"memory":{
-		"terms":"data/10182018-LEXICALNET-JEUXDEMOTS-ENTRIES.txt",
+		"terms":"data/terms.csv",
 		"relation_types":"data/relation_types.txt"
 	},
 
@@ -9,7 +9,7 @@
 		"stores": {
 			"Neo4j":{
 				"max_relation":10000000,
-				"url":"/home/user/Téléchargements/softwares/Database/neo4j-community-3.4.9-unix/neo4j-community-3.4.9/data/databases/graph.db"	
+				"url":"/auto_home/rcolin/Documents/M2/HMIN340/neo4j-community-3.4.7/data/databases/graph.db"	
 			}
 		}
 	}

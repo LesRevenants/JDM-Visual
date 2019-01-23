@@ -4,6 +4,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
+
 import configuration.MasterStore;
 
 
@@ -24,6 +26,7 @@ public class App {
 		}
 		String mode = args[0];
 		String config_file = args[1];
+		System.out.println(Arrays.asList(args).toString());
 		
 		MasterStore masterStore = new MasterStore(config_file);
 		if(mode.equals("--init")) {

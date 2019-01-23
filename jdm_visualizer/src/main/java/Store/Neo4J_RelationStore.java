@@ -4,6 +4,7 @@ import core.Relation;
 import core.FilteredQuery;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
@@ -65,7 +66,9 @@ public class Neo4J_RelationStore {
      * Used to access to the good {@link NEO4J_RELATION_LABEL} from a relation encoded as string
      */
     private PatriciaTrie<NEO4J_RELATION_LABEL> namesToRelationshipTypes;
+    
     private PatriciaTrie<String> neo4jToJdmRelationNames;
+    
     private HashMap<Integer,NEO4J_RELATION_LABEL> idToRelationshipTypes;
 
     private TermStore termStore;
@@ -346,6 +349,7 @@ public class Neo4J_RelationStore {
 	public void reset() {
 	  try (Transaction tx =graph.beginTx()) {
 		  graph.execute(delete_all_relationship);
+		
 		  tx.success();
 	  }
 				
@@ -371,17 +375,17 @@ public class Neo4J_RelationStore {
     	
 		Map<String,Integer> map = termStore.getTermIndex();
     	Iterator<Map.Entry<String, Integer>> it = map.entrySet().iterator();   	
-		int BATCH_SIZE = 65536*4;
+		int BATCH_SIZE = 65536*8;
     	int n = map.size() % BATCH_SIZE == 0 ? map.size()/BATCH_SIZE : (map.size()/BATCH_SIZE)+1;
+//    	
+//    	IndexManager index;
+//    	Index<Node> termIndex;
     	
-    	IndexManager index;
-    	Index<Node> termIndex;
-    	
-    	try ( Transaction tx = graph.beginTx() ){  
-    		index = graph.index();
-            termIndex = index.forNodes("terms");
-            tx.success();
-    	}   	
+//    	try ( Transaction tx = graph.beginTx() ){  
+//    		index = graph.index();
+//            termIndex = index.forNodes(termLabel.toString());
+//            tx.success();
+//    	}   	
         
     	for(int i=0;i<n && it.hasNext();i++) {
     		try ( Transaction tx = graph.beginTx() ){  
@@ -389,18 +393,35 @@ public class Neo4J_RelationStore {
     			for(int j=0;j<BATCH_SIZE && it.hasNext();j++) {
     				Map.Entry<String, Integer> pair = it.next();
     				Node node = graph.createNode(termLabel);
-        			node.setProperty("id",pair.getValue());
-        			node.setProperty("name", pair.getKey());
-        			termIndex.add(node, "name", node.getProperty("name"));
-        			termIndex.add(node, "id", node.getProperty("id"));
+        			node.setProperty("_id",pair.getValue());
+        			node.setProperty("_name", pair.getKey());
+//        			termIndex.add(node, "_name", node.getProperty("_name"));
+//        			termIndex.add(node, "_id", node.getProperty("_id"));
     			}
     			tx.success();
     		}
+    		logger.info(BATCH_SIZE*(i+1)+" nodes created ");
     	}
     	
     	long ellapsedMs = Duration.between(t1, Instant.now()).toMillis();
     	logger.info(map.size()+" terms inserted [time="+ellapsedMs+"ms");
-
+    	
+    }
+    
+    public void insertRelationship(String dataDir){
+    	File dir = new File(dataDir);
+    	if(! dir.isDirectory()) {
+    		logger.severe("Error "+dataDir+" is not a directory");
+    	}
+    	File [] relationshipFiles = dir.listFiles(new FilenameFilter() {
+    	    @Override
+    	    public boolean accept(File dir, String name) {
+    	        return name.endsWith(".csv");
+    	    }
+    	});
+    	for(File file : relationshipFiles){
+    		
+    	}
     	
     }
     
