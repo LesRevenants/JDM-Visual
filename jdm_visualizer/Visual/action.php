@@ -1,8 +1,6 @@
 <?php
 
-error_reporting( E_ALL );
-ini_set('display_errors',1);
-
+//error_reporting(E_ALL); ini_set('display_errors', 1);
 session_start();
 
 	if($_POST['output'] == "on") $_POST['output'] = "true";
@@ -104,7 +102,36 @@ session_start();
         </div>
       </header>
 </section>
-<table class="table">
+';
+$d = str_replace('{','',$out);
+$d = str_replace('}','',$d);
+$d = str_replace('\"','',$d);
+$d = explode('"r_', $d);
+//$d = explode(':', $d);
+$predicate = $d[0];
+$predicate = str_replace('"','',$predicate);
+$a = explode("]",$d[1]);
+foreach($a as $b) {
+$b = str_replace('[','',$b);
+}
+$a[0] = str_replace('[','',$a[0]);
+$a = explode(',',$a[0]);
+$a = str_replace('"','',$a);
+$h = array_shift($d);
+echo"<br>";
+$p = 1;
+foreach($d as $c) {
+$c = str_replace('":',',',$c);
+$c = explode(",[", $c);
+$c = str_replace('[','',$c);
+$c = str_replace(']','',$c);
+
+
+if($p%3 == 1) {
+echo'  
+
+
+<table class="table" style="display:inline; float:left; margin-left: 8%; overflow:scroll; height: 30%; width: 380px; margin-top:3%; margin-bottom:3%;">
   <thead class="thead-dark">
     <tr>
       <th scope="col">#</th>
@@ -113,37 +140,81 @@ session_start();
       <th scope="col">Poids</th>
     </tr>
   </thead>
-  <tbody>
-';
 
-print_r($out);
-$d = str_replace('{','',$out);
-$d = str_replace('}','',$d);
-$d = str_replace('\"','',$d);
-$d = explode(":", $d);
-$predicate = $d[0];
-echo "\n\n". $predicate."\n";
-$a = explode("]",$d[1]);
-foreach($a as $b) {
-$b = str_replace('[','',$b);
-}
-$a[0] = str_replace('[','',$a[0]);
-$a = explode(',',$a[0]);
-echo'
- <tr>
-      <th scope="row">1</th>
-      <td>'.$a[0].'</td>
-      <td>'.$a[1].'</td>
-      <td>'.$a[2].'</td>
+
+<tbody>
+
+
+
+'; }
+
+if($p%3 == 2) {
+
+echo'  
+
+
+<table class="table" style="display:inline; margin: 0 auto; margin-left: 8%; overflow:scroll; height: 30%; width: 380px; margin-top:3%; margin-bottom:3%;">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Mot X</th>
+      <th scope="col">Mot Y</th>
+      <th scope="col">Poids</th>
     </tr>
-';
+  </thead>
+
+
+<tbody>
+
+
+
+'; }
+
+if($p%3 == 3) {
+
+echo'  
+
+
+<table class="table" style="display:inline; float:right; margin-left: 8%; overflow:scroll; height: 30%; width: 380px; margin-top:3%; margin-bottom:3%;">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Mot X</th>
+      <th scope="col">Mot Y</th>
+      <th scope="col">Poids</th>
+    </tr>
+  </thead>
+
+
+
+<tbody>
+
+
+
+'; }
+
+$i = 1;
+//$m = array_shift($c);
+foreach($c as $e){
+
+$e = explode(",", $e);
+$e = str_replace('"','',$e);
+if($i == 1) {
+echo"
+<center>'. $c[0] .'</center>"; }
+else {
+echo"
+ <tr>
+      <th scope='row'>".$i."</th>
+      <td>".$e[0]."</td>
+      <td>".$e[1]."</td>
+      <td>".$e[2]."</td>
+    </tr>
+
+"; } $i++;  } }
 echo'
 
-  </tbody>
-</table>
-
-
-     
+       </tbody></table>
  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> 
 
  
@@ -216,7 +287,7 @@ echo'
 </html>';
 
 	function phpClient($arg) {
-	 $PORT = 9512; //the port on which we are connecting to the "remote" machine
+	 $PORT = 9515; //the port on which we are connecting to the "remote" machine
 	 $HOST = "localhost"; //the ip of the remote machine (in this case it's the same machine)
 	 
 	 $sock = socket_create(AF_INET, SOCK_STREAM, 0) //Creating a TCP socket
