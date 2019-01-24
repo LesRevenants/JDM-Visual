@@ -200,9 +200,11 @@ public class JDM_RelationStore implements RelationStore {
 //	   	                    }
 //	   	                    else {
 	   	                    	allRelations.putIfAbsent(relation_type,new ArrayList<>());
-		   	                   	Relation r = is_x_to_y_relation ?
-	   	                   			new Relation(0,relation_type,x_id,y_id,y.getPoids()) :  // change x and y relation according to order
-	   	                   			new Relation(0,relation_type,y_id,x_id,y.getPoids());
+	   	                    	
+		   	                   	Relation r = new Relation(0,relation_type,x_id,y_id,y.getPoids(),is_x_to_y_relation);
+//		   	                   			is_x_to_y_relation ?
+//	   	                   			  // change x and y relation according to order
+//	   	                   			new Relation(0,relation_type,y_id,x_id,y.getPoids());
 		   	                   	allRelations.get(relation_type).add(r);                
 //	   	                    }
 		   	                 	

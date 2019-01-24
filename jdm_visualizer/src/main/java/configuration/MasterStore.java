@@ -2,6 +2,7 @@ package configuration;
 
 import Store.*;
 import core.Relation;
+import core.Ambiguity;
 import core.FilteredQuery;
 import core.RelationQueryFactory;
 import core.TreeQuery;
@@ -84,11 +85,6 @@ public class MasterStore implements RelationStore{
 					else {
 						name = parts[1].replace("\\", "");         					
 					}
-//					if(id == 3318688) {
-//						String _name = termStore.getTermName(id);
-//						int _id = termStore.getTermId(name);
-//						int x = 5;
-//					}
 					termStore.addTerm(id,name);
 					if(isCached){
 						cacheManager.addTerm(id);
@@ -111,7 +107,7 @@ public class MasterStore implements RelationStore{
 		JSONObject storeObj = persistentObj.getJSONObject("stores");
 		JSONObject neo4jObj = storeObj.getJSONObject("Neo4j");
 
-//		neo4jStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
+		neo4jStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
         logger.info("Neo4J store building [OK]");		
             
     	jdmStore = new JDM_RelationStore(termStore);
@@ -120,9 +116,9 @@ public class MasterStore implements RelationStore{
     }
     
     public void init(String dataDirPath) {
-//    	neo4jStore.insertNodes();
+    	neo4jStore.insertNodes();
 //    	neo4jStore.reset();
-    	neo4jStore.insertRelationship(dataDirPath);
+//    	neo4jStore.insertRelationship(dataDirPath);
 //    	String name = termStore.getTermName(3318688);
 //    	String name2;
     }
@@ -229,7 +225,25 @@ public class MasterStore implements RelationStore{
     				for(Relation relation: queryResults.get(r_id)){
     					JSONArray relationArray = new JSONArray();
     					String x_name = termStore.getTermName((int) relation.getX_id());
-    					String y_name = termStore.getTermName((int) relation.getY_id());
+    					
+    					Ambiguity amb = termStore.getAmbiguity((int) relation.getY_id());
+    					
+    					String y_name;
+    					
+    					if(amb != null){
+    						StringBuilder sb = new StringBuilder();
+    						sb.append(termStore.getTermName(amb.getRootTermId()));
+    						for(Integer refId : amb.getRefTermIds()){
+    							sb.append("(");
+    							sb.append(termStore.getTermName(refId));
+    							sb.append(")");
+    						}
+    						y_name = sb.toString();
+    					}
+    					else{
+    						y_name = termStore.getTermName((int) relation.getY_id());
+    					}
+ 					
     					relationArray.put(x_name);
     					relationArray.put(y_name);
     					relationArray.put(relation.getWeight());
