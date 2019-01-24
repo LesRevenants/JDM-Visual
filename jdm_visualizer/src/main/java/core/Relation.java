@@ -7,6 +7,7 @@ public class Relation {
 	private long x_id;
 	private long y_id;
 	private double weight;
+	private boolean x_to_y;
 	
 	
 	public Relation(int id, int type, long x_id, long y_id, double weight) {
@@ -18,6 +19,16 @@ public class Relation {
 		this.weight = weight;
 	}
 	
+	public Relation(int id, int type, long x_id, long y_id, double weight, boolean x_to_y) {
+		super();
+		this.id = id;
+		this.type = type;
+		this.x_id = x_id;
+		this.y_id = y_id;
+		this.weight = weight;
+		this.x_to_y = x_to_y;
+	}
+
 	public int getId() {
 		return id;
 	}

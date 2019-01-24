@@ -1,6 +1,9 @@
 package Store;
 
 import org.apache.commons.collections4.trie.PatriciaTrie;
+import org.neo4j.cypher.internal.frontend.v2_3.ast.In;
+
+import core.Ambiguity;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -21,9 +24,11 @@ public class TermStore {
     /** Associate to each ambigous term the list of semantic raffinement term id
      *  ex : (avocat, id=104789) -> { 157204: 71637 (justice) , .}
      *  */ 
-    private HashMap<Integer,HashMap<Integer,Integer>> ambiguity;
+//    private HashMap<Integer,HashMap<Integer,Integer>> ambiguity;
+    private HashMap<Integer,Ambiguity> ambiguityRefs;
     
-    private PatriciaTrie<HashMap<Integer,Integer>> tmpAmbiguity;
+
+    private PatriciaTrie<HashMap<Integer,LinkedList<Integer>>> tmpAmbiguity;
     
     private HashMap<Integer,ArrayList<Integer>> conflicts;
     
@@ -40,6 +45,7 @@ public class TermStore {
         termsByIds = new HashMap<>();     
         tmpAmbiguity = new PatriciaTrie<>();
         conflicts = new HashMap<>();
+        ambiguityRefs = new HashMap<>();
     }
 
   
@@ -67,10 +73,18 @@ public class TermStore {
     		return;
     	}
     	resolvedAmbiguityNb = 0;
-    	ambiguity = new HashMap<>();
-    	for(String term : tmpAmbiguity.keySet()){ 	
-    		ambiguity.put(termsTrie.get(term), tmpAmbiguity.get(term));		
-    		resolvedAmbiguityNb += tmpAmbiguity.get(term).size();
+//    	ambiguity = new HashMap<>(); 	
+    	for(String rootTerm : tmpAmbiguity.keySet()){ 	
+    		Integer rootTermId = termsTrie.get(rootTerm);
+    		if(rootTermId != null){
+    			HashMap<Integer,LinkedList<Integer>> termIdToRaffinement = tmpAmbiguity.get(rootTerm);
+        		for(Integer termId : termIdToRaffinement.keySet()){
+        			Ambiguity amb = new Ambiguity(termId, rootTermId, termIdToRaffinement.get(termId));
+        			ambiguityRefs.put(termId,amb);
+        		}      		
+        		resolvedAmbiguityNb += tmpAmbiguity.get(rootTerm).size();
+    		}
+    		
     	}
     	tmpAmbiguity.clear();
     }
@@ -94,34 +108,33 @@ public class TermStore {
     	
     	Integer oldId = termsTrie.get(name);
 	  	if(oldId == null) {
+	  		
 	  		 termsTrie.put(name,id);            	    
 	  	     total_term_size += name.length();
 	       	 termsByIds.put(id, name);
-
-	       	 int ambiguityIdx = name.indexOf('>');
-	       	 if(ambiguityIdx != -1){
-	       		 String termName = name.substring(0,ambiguityIdx);  
-	       		 if(! termName.isEmpty()){
-	       			 
-	       			 String ambigiousTerm = name.substring(ambiguityIdx+1);
-		       		 int recursiveAmbiguityIdx = ambigiousTerm.indexOf('>');
-		       		 if(recursiveAmbiguityIdx == -1){
+	       	 
+	       	 String[] parts = name.split(">");       	 
+	       	 if(parts.length > 1){ // ambiguity found 
+	       		 String rootTerm = parts[0];
+	       		 if(! rootTerm.isEmpty()){
+	       			 LinkedList<Integer> refTermIds = new LinkedList<>();
+	       			 for(int i=1;i<parts.length;i++){
+	       				String ambigiousTerm = parts[i];
+	       				Integer refTermId;
 		       			 try{
-		       				Integer refTermId = Integer.parseInt(ambigiousTerm);
-				       		tmpAmbiguity.putIfAbsent(termName, new HashMap<>());
-				       		tmpAmbiguity.get(termName).put(id, refTermId);
-		       			 }
-		       			 catch(NumberFormatException e){
-		       				 unresolvedAmbiguityNb++;		       			
-		       			 }
-		       			
-		       		 }
-		       		 else{
-		       			   unresolvedAmbiguityNb++;
-		       		 }
-	       		 }	       		     		 
+		       				refTermId = Integer.parseInt(ambigiousTerm);			       		
+			       		 } catch(NumberFormatException e){ 
+			       			 refTermId = termsTrie.get(ambigiousTerm);
+//			       			 unresolvedAmbiguityNb++; 
+			       		}
+		       			tmpAmbiguity.putIfAbsent(rootTerm, new HashMap<>());
+			       		refTermIds.add(refTermId);		
+	       			}
+	       			tmpAmbiguity.get(rootTerm).put(id, refTermIds);
+	       		 }
 	       	 }
 	  	}
+	       	
 	  	else {
 	  		conflicts.putIfAbsent(oldId, new ArrayList<>(2));
 	  		conflicts.get(oldId).add(id);
@@ -130,7 +143,67 @@ public class TermStore {
 	  	}
     }
 
-    
+//    if(parts.length == 2){
+//  		 String rootTerm = parts[0];
+//  		 if(! rootTerm.isEmpty()){
+//  			 
+//  			 LinkedList<Integer> refTermIds = new LinkedList<>();
+//  			 String ambigiousTerm = parts[1];
+////      		 int recursiveAmbiguityIdx = ambigiousTerm.indexOf('>');
+////      		 if(recursiveAmbiguityIdx == -1){
+//  			 try{
+//  				Integer refTermId = Integer.parseInt(ambigiousTerm);
+//	       		tmpAmbiguity.putIfAbsent(rootTerm, new HashMap<>());
+//	       		refTermIds.add(refTermId);
+//	       		tmpAmbiguity.get(rootTerm).put(id, refTermIds);
+////		       		refTerms.add(refTermId);
+////		       		Ambiguity amb = new Ambiguity(id, leftId, rightIds)
+//  			 }
+//  			 catch(NumberFormatException e){
+//  				 unresolvedAmbiguityNb++;		       			
+//  			 }
+//      			
+////      		 }
+////      		 else{
+////      			   unresolvedAmbiguityNb++;
+////      		 }
+//  		 }	  
+//  	 }
+//  	 else if(parts.length > 2){
+//  		 
+//  	 }
+//  	 
+//
+//  	 int ambiguityIdx = name.indexOf('>');
+//  	 if(ambiguityIdx != -1){
+//  		 String rootTerm = name.substring(0,ambiguityIdx);  
+//  		
+//  		 if(! rootTerm.isEmpty()){
+//  			 
+//  			 LinkedList<Integer> refTermIds = new LinkedList<>();
+//  			 
+//  			 String ambigiousTerm = name.substring(ambiguityIdx+1);
+//      		 int recursiveAmbiguityIdx = ambigiousTerm.indexOf('>');
+//      		 if(recursiveAmbiguityIdx == -1){
+//      			 try{
+//      				Integer refTermId = Integer.parseInt(ambigiousTerm);
+//		       		tmpAmbiguity.putIfAbsent(rootTerm, new HashMap<>());
+//		       		refTermIds.add(refTermId);
+//		       		tmpAmbiguity.get(rootTerm).put(id, refTermIds);
+////		       		refTerms.add(refTermId);
+////		       		Ambiguity amb = new Ambiguity(id, leftId, rightIds)
+//      			 }
+//      			 catch(NumberFormatException e){
+//      				 unresolvedAmbiguityNb++;		       			
+//      			 }
+//      			
+//      		 }
+//      		 else{
+//      			   unresolvedAmbiguityNb++;
+//      		 }
+//  		 }	       		     		 
+//  	 }
+//	}
 
     
     public HashMap<Integer, ArrayList<Integer>> getConflicts() {
@@ -185,8 +258,9 @@ public class TermStore {
 		return unresolvedAmbiguityNb;
 	}
 	
-	
-	
+	public Ambiguity getAmbiguity(Integer termId){
+		return ambiguityRefs.get(termId);
+	}
 	
 
 
