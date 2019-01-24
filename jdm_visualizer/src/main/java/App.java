@@ -66,6 +66,7 @@ public class App {
                 int read_status = br.read(buffer);
                 if(read_status == -1 || read_status > 0)  { // ensure that read not fail
                 	String query = new String(buffer);
+                	System.out.println(query);
                 	String resultsStr = masterStore.query(query);
                 	bw.write(resultsStr);  
 	                bw.close();

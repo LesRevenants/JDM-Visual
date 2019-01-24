@@ -43,6 +43,7 @@ session_start();
 		$content .= ""."\"format\":\"";
 		$content .= "grouped" . '"'. "}";
 
+
 	try {
 	 $out = phpClient($content);   //exec("java -jar ready.jar {$arg}", $output);
 	} catch (Exception $e) { echo "yolo"; }

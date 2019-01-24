@@ -111,7 +111,7 @@ public class MasterStore implements RelationStore{
 		JSONObject storeObj = persistentObj.getJSONObject("stores");
 		JSONObject neo4jObj = storeObj.getJSONObject("Neo4j");
 
-		neo4jStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
+//		neo4jStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
         logger.info("Neo4J store building [OK]");		
             
     	jdmStore = new JDM_RelationStore(termStore);
@@ -198,7 +198,7 @@ public class MasterStore implements RelationStore{
 		String format = rootObj.getString("format");
 
 		List<String> relationsSearched = new ArrayList<>(predicatesArray.length());
-		for(int i=0;i<predicatesArray.length();i++){
+		for(int i=0;i<predicatesArray.length();i++){			
 			relationsSearched.add(predicatesArray.getString(i));
 		}
 		List<String> yTerms = new ArrayList<>(yTermsArray.length());

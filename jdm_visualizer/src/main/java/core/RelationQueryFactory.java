@@ -33,19 +33,24 @@ public class RelationQueryFactory {
 		HashSet<Long> term_ids = new HashSet<>();
 		if(relations_searched != null) {
 			for(String term : term_searched) {
-				Integer term_id = termStore.getTermId(term);
-				if(term_id != null) {
-					term_ids.add( (long) term_id);
-				}
+				if(! term.isEmpty()){
+					Integer term_id = termStore.getTermId(term);
+					if(term_id != null) {
+						term_ids.add( (long) term_id);
+					}
+				}				
 			}
 		}	
 		HashSet<Integer> relation_ids = new HashSet<>();
 		if(relations_searched != null ) {				
 			for(String r_name : relations_searched) {
-				Integer r_id = relationTypeStore.getId(r_name);
-				if(r_id != null) {
-					relation_ids.add(r_id);
+				if(! r_name.isEmpty()){
+					Integer r_id = relationTypeStore.getId(r_name);
+					if(r_id != null) {
+						relation_ids.add(r_id);
+					}
 				}
+				
 			}
 		}
 		FilteredQuery relationQuery = new FilteredQuery(x_id, term_ids, in, out, relation_ids);
