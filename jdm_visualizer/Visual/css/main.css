@@ -131,6 +131,24 @@
 
 }
 
+.one {
+
+	float:left;
+	width:50%;
+	height:auto;
+	background-color: white;
+
+}
+
+.two {
+
+	float:right;
+	width:50%;
+	height:auto;
+	background-color: white;
+
+}
+
 #outer {
   width: 100%;
   text-align: center;
