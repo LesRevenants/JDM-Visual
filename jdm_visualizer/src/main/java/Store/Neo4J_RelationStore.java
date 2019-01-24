@@ -3,8 +3,11 @@ package Store;
 import core.Relation;
 import core.FilteredQuery;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
@@ -17,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.json.JSONObject;
@@ -25,12 +29,8 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.index.Index;
-import org.neo4j.graphdb.index.IndexManager;
-import org.neo4j.kernel.impl.api.index.UpdateMode;
 import org.neo4j.graphdb.RelationshipType;
 
 
@@ -328,8 +328,8 @@ public class Neo4J_RelationStore {
 		try ( Transaction tx = graph.beginTx() ){
     		
     		for(Relation relation : relationBuffer) {
-    			Node x_node = graph.findNode(termLabel,"id",relation.getX_id());
-            	Node y_node = graph.findNode(termLabel,"id",relation.getY_id()); 
+    			Node x_node = graph.findNode(termLabel,"_id",relation.getX_id());
+            	Node y_node = graph.findNode(termLabel,"_id",relation.getY_id()); 
             	
             	if(x_node != null && y_node != null) {
             		String r_name = relationTypeStore.getName(relation.getType()); // get relation name into Neo4j
@@ -348,10 +348,10 @@ public class Neo4J_RelationStore {
 
 	public void reset() {
 	  try (Transaction tx =graph.beginTx()) {
-		  graph.execute(delete_all_relationship);
-		
+		  graph.execute(delete_all_relationship);		
 		  tx.success();
 	  }
+	  logger.info("Reseting all relationship [OK]");
 				
 	}
 
@@ -409,6 +409,7 @@ public class Neo4J_RelationStore {
     }
     
     public void insertRelationship(String dataDir){
+    	
     	File dir = new File(dataDir);
     	if(! dir.isDirectory()) {
     		logger.severe("Error "+dataDir+" is not a directory");
@@ -419,9 +420,79 @@ public class Neo4J_RelationStore {
     	        return name.endsWith(".csv");
     	    }
     	});
-    	for(File file : relationshipFiles){
+    	
+    	int BATCH_SIZE = 65536;
+    	HashMap<Integer,ArrayList<Integer>> conflicts = termStore.getConflicts();
     		
+    	for(File file : relationshipFiles){
+    		try {
+    			
+    			Instant t1 = Instant.now();   			
+    			Integer rTypeId = Integer.parseInt(file.getName().split("\\.")[0]);	
+    			
+				BufferedReader buffReader = new BufferedReader(new FileReader(file));
+				/**
+				 * get all lines from file and skip first line corresponding to csv header
+				 * #FixMe : read file by using buffer without storing whole file into memory
+				 */
+				List<String> lines = buffReader.lines().skip(1).collect(Collectors.toCollection(ArrayList::new)); 
+				int n=lines.size() % BATCH_SIZE == 0 ? lines.size()/BATCH_SIZE : (lines.size()/BATCH_SIZE)+1;
+				
+				for(int i=0; i<n;i++) { // read the lines and write BATCH_SIZE by BATCH_SIZE relation into DB
+					int k = i*BATCH_SIZE;
+					try ( Transaction tx = graph.beginTx() ){  
+						
+						for(int j=k;j<k+BATCH_SIZE && j<lines.size();j++) {
+							
+							String line = lines.get(j);						
+							String[] parts = line.split(",");
+							int x_id = Integer.parseInt(parts[0]);
+							int y_id = Integer.parseInt(parts[1]);
+							short weight = Short.parseShort(parts[2]);
+							
+							Node xNode = graph.findNode(termLabel, "_id", x_id);
+							Node yNode = graph.findNode(termLabel, "_id", y_id);
+							if(xNode == null) {
+								ArrayList<Integer> otherIds = conflicts.get(x_id);
+								if(otherIds != null) {
+									for(int idx=0 ;idx<otherIds.size() && xNode == null; idx++) {
+										xNode = graph.findNode(termLabel, "_id", otherIds.get(idx));
+									}									
+								}
+							}
+							if(yNode == null) {
+								ArrayList<Integer> otherIds = conflicts.get(y_id);
+								if(otherIds != null) {
+									for(int idx=0 ;idx<otherIds.size() && yNode == null; idx++) {
+										yNode = graph.findNode(termLabel, "_id", otherIds.get(idx));
+									}									
+								}
+							}
+							if(xNode != null && yNode != null) {
+								RelationshipType relationshipType = idToRelationshipTypes.get(rTypeId);
+								Relationship relationship = xNode.createRelationshipTo(yNode,relationshipType);
+								relationship.setProperty("weight", weight);
+							}
+							else {
+								System.out.println(x_id+":"+xNode+":"+y_id+yNode);
+							}
+							//tx.success();
+							
+						}
+					}	
+					
+				}
+				
+				buffReader.close();
+				long ellapsedTime = Duration.between(t1,Instant.now()).toMillis()/1000;
+				System.out.println(rTypeId+".csv "+lines.size()+" relationship inserted [OK] time="+ellapsedTime+"s");
+						
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+    			
     	}
+    	
     	
     }
     

@@ -6,9 +6,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,8 @@ public class TermStore {
     
     private PatriciaTrie<HashMap<Integer,Integer>> tmpAmbiguity;
     
+    private HashMap<Integer,ArrayList<Integer>> conflicts;
+    
     private int resolvedAmbiguityNb, unresolvedAmbiguityNb;
     
     private int total_term_size;
@@ -36,6 +39,7 @@ public class TermStore {
         termsTrie = new PatriciaTrie<>();
         termsByIds = new HashMap<>();     
         tmpAmbiguity = new PatriciaTrie<>();
+        conflicts = new HashMap<>();
     }
 
   
@@ -88,7 +92,8 @@ public class TermStore {
     
     public void addTerm(Integer id, String name) {
     	
-	  	if(! termsTrie.containsKey(name)) {
+    	Integer oldId = termsTrie.get(name);
+	  	if(oldId == null) {
 	  		 termsTrie.put(name,id);            	    
 	  	     total_term_size += name.length();
 	       	 termsByIds.put(id, name);
@@ -117,12 +122,23 @@ public class TermStore {
 	       		 }	       		     		 
 	       	 }
 	  	}
+	  	else {
+	  		conflicts.putIfAbsent(oldId, new ArrayList<>(2));
+	  		conflicts.get(oldId).add(id);
+	  		conflicts.putIfAbsent(id, new ArrayList<>(2));
+	  		conflicts.get(id).add(oldId);
+	  	}
     }
 
-
+    
 
     
-    public void resetTerms() {
+    public HashMap<Integer, ArrayList<Integer>> getConflicts() {
+		return conflicts;
+	}
+
+
+	public void resetTerms() {
         termsTrie.clear();
         termsByIds.clear();
 //        mweTermsByIds.clear();

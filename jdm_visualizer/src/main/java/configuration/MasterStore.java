@@ -6,17 +6,17 @@ import core.FilteredQuery;
 import core.RelationQueryFactory;
 import core.TreeQuery;
 
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -62,29 +62,44 @@ public class MasterStore implements RelationStore{
 		
 		termStore = new TermStore();
 		cacheManager = new CacheManager();
-	        
-        List<String> lines = Files.readAllLines(Paths.get(serialized_terms_path),StandardCharsets.ISO_8859_1);
-        Iterator<String> it = lines.iterator();
-        if(it.hasNext()){
-        	it.next(); // split first csv line
-        	while(it.hasNext()){
-        		String line = it.next();
-        		if(line != null && !line.isEmpty()) {
-    				String[] parts = line.split(",");	
-    				if(parts.length == 3) {
-    					Integer id = Integer.parseInt(parts[0]);
-    					Boolean isCached = Boolean.parseBoolean(parts[2]);
-    					String name = parts[1].replace("\\", "");  					
-    					termStore.addTerm(id,name);
-    					if(isCached){
-    						cacheManager.addTerm(id);
-    					}
-    				}	
-    			}
-        	}
+	       		
+		BufferedReader buffReader = Files.newBufferedReader(Paths.get(serialized_terms_path), StandardCharsets.ISO_8859_1);
+        List<String> lines = buffReader.lines().skip(1).collect(Collectors.toList());
+        for(String line : lines) {
+        	    		
+    		if(line != null && !line.isEmpty()) {
+				String[] parts = line.split(",");	
+				if(parts.length >=3 ) {
+					Integer id = Integer.parseInt(parts[0]);
+					String name;
+					Boolean isCached = Boolean.parseBoolean(parts[parts.length-1]);
+										
+					if(parts.length > 3 ) { // if name contains multiple , then build the concatenation of each word parts
+						StringBuilder completeName = new StringBuilder();
+						for(int i=1;i<parts.length-1;i++) {
+							completeName.append(parts[i]);
+						}
+						name = completeName.toString();
+					}
+					else {
+						name = parts[1].replace("\\", "");         					
+					}
+//					if(id == 3318688) {
+//						String _name = termStore.getTermName(id);
+//						int _id = termStore.getTermId(name);
+//						int x = 5;
+//					}
+					termStore.addTerm(id,name);
+					if(isCached){
+						cacheManager.addTerm(id);
+					}
+				}	
+			}
         }
+        buffReader.close();
+        
         termStore.resolveAmbiguity();
-		logger.info("MemoryTermStore init[OK] "+lines.size()+"terms read");
+		logger.info("MemoryTermStore init[OK] "+termStore.length()+"terms read");
 		logger.info("\t"+cacheManager.getNbTermCached()+" terms cached,");
 		logger.info("\t"+termStore.getResolvedAmbiguityNb()+"/"+termStore.getUnresolvedAmbiguityNb()+" ambiguity resolved/unresolved");
 			
@@ -100,13 +115,16 @@ public class MasterStore implements RelationStore{
         logger.info("Neo4J store building [OK]");		
             
     	jdmStore = new JDM_RelationStore(termStore);
-
         queryFactory  = new RelationQueryFactory(termStore, relationTypeStore);
              
     }
     
     public void init(String dataDirPath) {
-    	neo4jStore.insertNodes();
+//    	neo4jStore.insertNodes();
+//    	neo4jStore.reset();
+    	neo4jStore.insertRelationship(dataDirPath);
+//    	String name = termStore.getTermName(3318688);
+//    	String name2;
     }
     
     public JDM_RelationStore getInputStore() {
