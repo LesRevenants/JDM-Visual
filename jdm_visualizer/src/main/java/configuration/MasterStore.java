@@ -4,8 +4,10 @@ import Store.*;
 import core.Relation;
 import core.Ambiguity;
 import core.FilteredQuery;
+import core.Query;
 import core.RelationQueryFactory;
 import core.TreeQuery;
+import requeterRezo.Voisin;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -97,7 +99,7 @@ public class MasterStore implements RelationStore{
         buffReader.close();
         
         termStore.resolveAmbiguity();
-		logger.info("MemoryTermStore init[OK] "+termStore.length()+"terms read");
+		logger.info("MemoryTermStore init[OK] "+termStore.length()+" terms read");
 		logger.info("\t"+cacheManager.getNbTermCached()+" terms cached,");
 		logger.info("\t"+termStore.getResolvedAmbiguityNb()+"/"+termStore.getUnresolvedAmbiguityNb()+" ambiguity resolved/unresolved");
 			
@@ -118,9 +120,9 @@ public class MasterStore implements RelationStore{
     }
     
     public void init(String dataDirPath) {
-    	neo4jStore.insertNodes();
+//    	neo4jStore.insertNodes();
 //    	neo4jStore.reset();
-//    	neo4jStore.insertRelationship(dataDirPath);
+    	neo4jStore.insertRelationship(dataDirPath);
 //    	String name = termStore.getTermName(3318688);
 //    	String name2;
     }
@@ -212,7 +214,9 @@ public class MasterStore implements RelationStore{
 		else{
 			queryResults = query(query);
 		}
-    	return buildJsonContent(queryResults, format);
+    	String content =  buildJsonContent(queryResults,query,format);
+    	logger.info(content.length()+"bytes send ");
+    	return content;
     }
     
     /**
@@ -221,11 +225,15 @@ public class MasterStore implements RelationStore{
      * @param format
      * @return
      */
-    private String buildJsonContent(Map<Integer, ArrayList<Relation>> queryResults,String format){
+    private String buildJsonContent(Map<Integer, ArrayList<Relation>> queryResults,Query query, String format){
     	JSONObject jsonObj = new JSONObject();
     	
     	switch(format) {
     		case "grouped" : {
+    			jsonObj.put("definition", query == null ? "" : query.getDefinition());
+    			JSONObject results = new JSONObject();
+    			jsonObj.put("relations", results);
+
     			for(Integer r_id : queryResults.keySet()){
     				String relationName = relationTypeStore.getName(r_id);
     			    JSONArray allRelations = new JSONArray();
@@ -234,7 +242,7 @@ public class MasterStore implements RelationStore{
     					
     					JSONArray relationArray = new JSONArray();
     					String x_name = termStore.getTermName((int) relation.getX_id()); 					
-    					Ambiguity amb = termStore.getAmbiguity((int) relation.getY_id());
+    					Ambiguity amb = termStore.getAmbiguity((int) relation.getVoisin().getNoeud().getID());
     					String y_name;
     					
     					if(amb != null){
@@ -251,12 +259,22 @@ public class MasterStore implements RelationStore{
     						y_name = termStore.getTermName((int) relation.getY_id());
     					}
  					
-    					relationArray.put(x_name);
-    					relationArray.put(y_name);
-    					relationArray.put(relation.getWeight());
+    					if(y_name == null){ 						
+    						y_name = relation.getVoisin().getNom();
+    					}
+    					if(relation.isX_to_y()){
+        					relationArray.put(x_name);
+        					relationArray.put(y_name);
+    					}
+    					else{
+        					relationArray.put(y_name);
+        					relationArray.put(x_name);
+    					}
+    					relationArray.put(relation.getVoisin().getPoids());
     					allRelations.put(relationArray);
     				}
-    				jsonObj.put(relationName, allRelations);
+    				results.put(relationName, allRelations);
+    				
     			}
     			break;
     		}
@@ -267,6 +285,7 @@ public class MasterStore implements RelationStore{
     			break;
     		}
     	}
+    	System.out.println(jsonObj.toString());
     	return jsonObj.toString();
     }
     

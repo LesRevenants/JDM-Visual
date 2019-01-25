@@ -65,14 +65,14 @@ public class App {
                 char[] buffer = new char[4096];
                 int read_status = br.read(buffer);
                 if(read_status == -1 || read_status > 0)  { // ensure that read not fail
+//                	br.close();
                 	String query = new String(buffer);
                 	System.out.println(query);
-                	String resultsStr = masterStore.query(query);
-                	bw.write(resultsStr);  
-	                bw.close();
-	                br.close();
-	                sock.close(); 
-            	}
+                	String resultsStr = masterStore.query(query);                 
+                	bw.write(resultsStr);      
+            	}             
+                bw.close();               
+                sock.close(); 
 
             }
         } catch (Exception ex) {

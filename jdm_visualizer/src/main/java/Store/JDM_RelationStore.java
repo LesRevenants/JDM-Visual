@@ -129,6 +129,7 @@ public class JDM_RelationStore implements RelationStore {
     		}
     		else { // search only one relation
     			Mot mot = requeterRezo.requete(x_name,first_relation,filtre);
+    			query.setDefinition(mot.getDefinition());
             	if(mot != null) {
         			queryFiltered(mot,in,isOut,terms_searched,allRelations);   			
     			}
@@ -137,6 +138,7 @@ public class JDM_RelationStore implements RelationStore {
         else { // no particular relation searched
         	Mot mot = requeterRezo.requete(x_name,filtre);
         	if(mot != null) {
+    			query.setDefinition(mot.getDefinition());
             	queryFiltered(mot,in,isOut,terms_searched,allRelations);  
         	}
         }
@@ -198,10 +200,13 @@ public class JDM_RelationStore implements RelationStore {
 //	   	                    if(termStore.getTermName((int) y_id) == null) {
 //	   	                    	
 //	   	                    }
+            			 
 //	   	                    else {
 	   	                    	allRelations.putIfAbsent(relation_type,new ArrayList<>());
+	   	                        
 	   	                    	
-		   	                   	Relation r = new Relation(0,relation_type,x_id,y_id,y.getPoids(),is_x_to_y_relation);
+		   	                   	Relation r = new Relation(x_id, y, is_x_to_y_relation);
+		   	                   	//= new Relation(0,relation_type,x_id,y_id,y.getPoids(),is_x_to_y_relation);
 //		   	                   			is_x_to_y_relation ?
 //	   	                   			  // change x and y relation according to order
 //	   	                   			new Relation(0,relation_type,y_id,x_id,y.getPoids());
@@ -214,8 +219,7 @@ public class JDM_RelationStore implements RelationStore {
 //	   	                    }
 	   	                           
                       }
-            	   }
-                  
+            	   }                  
                }
            }
 

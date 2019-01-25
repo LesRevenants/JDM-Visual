@@ -10,6 +10,10 @@ public abstract class Query {
 	/** the x word */
 	protected int x; 
 	
+	protected String definition;
+	
+	
+
 	/** indicate if incoming and/or outcoming relations must be selected or not */
 	protected boolean in,out; 
 	
@@ -31,6 +35,16 @@ public abstract class Query {
 	public boolean isOut() {
 		return out;
 	}
+	
+	public void setDefinition(String definition) {
+		this.definition = definition;
+	}
+
+	public String getDefinition() {
+		return definition;
+	}
+	
+	
 	
 	
 	

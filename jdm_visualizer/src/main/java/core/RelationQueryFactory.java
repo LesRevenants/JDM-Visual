@@ -28,10 +28,14 @@ public class RelationQueryFactory {
 	public FilteredQuery create(String x_word,List<String> term_searched, boolean in, boolean out, List<String> relations_searched) {
 		Integer x_id = termStore.getTermId(x_word);
 		if(x_id == null) {
+			if(	term_searched!= null && term_searched.size() == 1
+				&& relations_searched != null && relations_searched.size() == 1){
+				return create(term_searched.get(0), null, true,false,relations_searched);
+			}
 			return null;
 		}
 		HashSet<Long> term_ids = new HashSet<>();
-		if(relations_searched != null) {
+		if(term_searched != null) {
 			for(String term : term_searched) {
 				if(! term.isEmpty()){
 					Integer term_id = termStore.getTermId(term);

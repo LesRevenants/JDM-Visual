@@ -476,7 +476,7 @@ public class Neo4J_RelationStore {
 							else {
 								System.out.println(x_id+":"+xNode+":"+y_id+yNode);
 							}
-							//tx.success();
+							tx.success();
 							
 						}
 					}	

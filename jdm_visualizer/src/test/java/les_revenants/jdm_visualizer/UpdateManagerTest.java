@@ -53,10 +53,10 @@ public class UpdateManagerTest {
         RelationQueryFactory queryFactory = new RelationQueryFactory(termStore, masterStore.getRelationTypeStore());
         
         queries.add(queryFactory.create("requin"));
-        queries.add(queryFactory.create("chat",Arrays.asList("félin","souris","nom"),Arrays.asList("r_isa","r_pos")));
-        queries.add(queryFactory.create("chat",Arrays.asList("félin","souris","nom"),null));
-        queries.add(queryFactory.create("ours"));
-        queries.add(queryFactory.create("ours",Arrays.asList("félin","miel","animal","brun","griffe"),Arrays.asList("r_isa","r_associated","r_carac","r_has_part")));
+//        queries.add(queryFactory.create("chat",Arrays.asList("félin","souris","nom"),Arrays.asList("r_isa","r_pos")));
+//        queries.add(queryFactory.create("chat",Arrays.asList("félin","souris","nom"),null));
+//        queries.add(queryFactory.create("ours"));
+//        queries.add(queryFactory.create("ours",Arrays.asList("félin","miel","animal","brun","griffe"),Arrays.asList("r_isa","r_associated","r_carac","r_has_part")));
 
         String[] words = { 
         		"piano"
@@ -153,12 +153,12 @@ public class UpdateManagerTest {
 
     }
     
-   @Test
-   public void testQueries() throws Exception {
-//	   testRunQueries(queries,false);
-//	   testRunQueries(queries,true);
-//       testRunQueries(queries2);
-   }
+//   @Test
+//   public void testQueries() throws Exception {
+//	   testRunQueries(queries);
+////	   testRunQueries(queries,true);
+////       testRunQueries(queries2);
+//   }
   
     
    @Test
@@ -166,7 +166,7 @@ public class UpdateManagerTest {
 	    System.out.println("TEST_JSON");
 	    for(FilteredQuery q : queries) {
 	    	String q1JSON = q.asJSON(termStore, relationTypeStore,"grouped");
-			System.out.println(q1JSON);			
+//			System.out.println(q1JSON);			
 			String q1ResultsJSON = masterStore.query(q1JSON);
 			System.out.println(q1ResultsJSON);
 	    }
