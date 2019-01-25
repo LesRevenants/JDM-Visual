@@ -191,8 +191,8 @@ public class MasterStore implements RelationStore{
 		String x = rootObj.getString("motx");
 		JSONArray predicatesArray = rootObj.getJSONArray("predicates");
 		JSONArray yTermsArray = rootObj.getJSONArray("terms");
-		Boolean isIn = ! Boolean.parseBoolean(rootObj.getString("in"));
-		Boolean isOut= ! Boolean.parseBoolean(rootObj.getString("out"));
+		Boolean isIn = Boolean.parseBoolean(rootObj.getString("in"));
+		Boolean isOut = Boolean.parseBoolean(rootObj.getString("out"));
 		String format = rootObj.getString("format");
 
 		List<String> relationsSearched = new ArrayList<>(predicatesArray.length());
