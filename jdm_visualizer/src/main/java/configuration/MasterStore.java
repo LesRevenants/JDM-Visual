@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -204,7 +205,13 @@ public class MasterStore implements RelationStore{
 		}
 		
 		FilteredQuery query = queryFactory.create(x,yTerms,isIn,isOut,relationsSearched);
-		Map<Integer, ArrayList<Relation>> queryResults = query(query);
+		Map<Integer, ArrayList<Relation>> queryResults;
+		if(query == null){
+			queryResults = new HashMap<>();
+		}
+		else{
+			queryResults = query(query);
+		}
     	return buildJsonContent(queryResults, format);
     }
     

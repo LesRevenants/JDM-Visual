@@ -38,6 +38,9 @@ public class RelationQueryFactory {
 					if(term_id != null) {
 						term_ids.add( (long) term_id);
 					}
+					else{
+						return null;
+					}
 				}				
 			}
 		}	
@@ -48,6 +51,9 @@ public class RelationQueryFactory {
 					Integer r_id = relationTypeStore.getId(r_name);
 					if(r_id != null) {
 						relation_ids.add(r_id);
+					}
+					else{
+						return null;
 					}
 				}
 				
