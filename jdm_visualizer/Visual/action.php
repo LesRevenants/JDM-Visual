@@ -3,6 +3,16 @@
 //error_reporting(E_ALL); ini_set('display_errors', 1);
 session_start();
 
+if(isset($_GET['x']))
+{
+    $request = '{"motx":"'.$_GET['x'].'","predicates":[""],"terms":[""],"in":"true","out":"true","format":"grouped"}';
+    	try {
+	 $out = phpClient($request);   //exec("java -jar ready.jar {$arg}", $output);
+	} catch (Exception $e) { echo "yolo"; }
+}
+
+else {
+
 	if($_POST['output'] == "on") $_POST['output'] = "false";
 	else { $_POST['output'] = "true"; }
 	if($_POST['input'] == "on") $_POST['input'] = "false";
@@ -47,7 +57,9 @@ session_start();
 	try {
 	 $out = phpClient($content);   //exec("java -jar ready.jar {$arg}", $output);
 	} catch (Exception $e) { echo "yolo"; }
-?>
+	}?>
+
+
 
 <!doctype html>
 	<html class="no-js" lang="en">
@@ -113,6 +125,9 @@ session_start();
 			</div>
 		      </header>
 		</section>
+		<div style="width: 50%; margin:auto">
+			<canvas id="canva"></canvas>
+		</div>
 		<?php
 		$d = str_replace('{','',$out);
 		$d = str_replace('}','',$d);
@@ -122,6 +137,8 @@ session_start();
 		$predicate = $d[0];
 		$predicate = str_replace('"','',$predicate);
 		$a = explode("]",$d[1]);
+		$bigarray = array();
+		$poidsarray = array();
 		$array = array();
 		$arrouille = array();
 		$cpt;
@@ -133,7 +150,7 @@ session_start();
 			$a = str_replace('"','',$a);
 			$h = array_shift($d);
 			echo"<br>";
-			$p = 1;
+			$p = 0;
 			foreach($d as $c) {
 				$c = str_replace('":',',',$c);
 				$c = explode(",[", $c);
@@ -142,10 +159,10 @@ session_start();
 
 
 				echo'  
-
+				
 				<div class="one">
-				<table class="table" style="display: block; margin : auto; overflow-y:scroll !important; height: 400px; max-height: 500px !important; width: 400px; margin-top:3%; margin-bottom:3%;">
-				  <thead class="thead-dark">
+				<table class="table" style="display: block; margin : auto; overflow-y:scroll !important; height: 400px; max-height: 500px !important; width: 600px; margin-top:3%; margin-bottom:3%;">
+				  <thead class="thead-dark" style="width: 600px;">
 				    <tr>
 				      <th scope="col">#</th>
 				      <th scope="col">Mot X</th>
@@ -156,7 +173,7 @@ session_start();
 
 
 
-				<tbody>
+				<tbody style="width: 600px;">
 
 
 
@@ -174,19 +191,22 @@ session_start();
 						<center><h2 style='display:inline;'>r_".$e[0]."</h2></center>"; $arrouille[$cpt] = $e[0];}
 						else {
 						echo"
-						 <tr>
-						      <th scope='row'>".($i-1)."</th>
-						      <td>".$e[0]."</td>
-						      <td>".$e[1]."</td>
-						      <td>".$e[2]."</td>
+						 <tr style='width:100%;'>
+						      <th scope='row' style='width:30px;'>".($i-1)."</th>
+						      <td style='width:200px;'>".$e[0]."</td>
+						      <td style='width:320px;'><a href='http://localhost/~fpascual/JDM-Visual/jdm_visualizer/Visual/action.php?x=".$e[1]."'>".$e[1]."</a></td>
+						      <td style='width:50px;'>".$e[2]."</td>
 						    </tr>
 
 						"; 
+						
 					} 
+					$bigarray[$p][$i-1] = $e[1];
+					$poidsarray[$p][$i-1] = $e[2];  
 					$i++;  
 				} 
 				$array[$cpt] = $i-2; 
-				$cpt++;
+				$cpt++; $p++;
 			}
 			?>
 
@@ -195,54 +215,14 @@ session_start();
 	</div>
 
 	<div class="two">
+	<?php for($y = 0; $y<$p; $y++) {
+		echo '<div style="width: 50%; margin:auto; padding-top: 136px; padding-bottom: 136px;">
+			<canvas id="canvas'.$y.'"></canvas>
+		</div>';
+		
+		} ?>
 
-
-		<div style="width: 75%">
-			<canvas id="canvas"></canvas>
-		</div>
-
-	<script>
-		var ctx = document.getElementById("canvas");
-		var tablee = <?php echo js_array($array); ?>;
-		var tablii = <?php echo js_array($arrouille); ?>;
-		var myChart = new Chart(ctx, {
-		    type: "bar",
-		    data: {
-			labels: tablii,
-			datasets: [{
-			    label: "# of relations",
-			    data: tablee,
-			    backgroundColor: [
-				"rgba(255, 99, 132, 0.2)",
-				"rgba(54, 162, 235, 0.2)",
-				"rgba(255, 206, 86, 0.2)",
-				"rgba(75, 192, 192, 0.2)",
-				"rgba(153, 102, 255, 0.2)",
-				"rgba(255, 159, 64, 0.2)"
-			    ],
-			    borderColor: [
-				"rgba(255,99,132,1)",
-				"rgba(54, 162, 235, 1)",
-				"rgba(255, 206, 86, 1)",
-				"rgba(75, 192, 192, 1)",
-				"rgba(153, 102, 255, 1)",
-				"rgba(255, 159, 64, 1)"
-			    ],
-			    borderWidth: 1
-			}]
-		    },
-		    options: {
-			scales: {
-			    yAxes: [{
-				ticks: {
-				    beginAtZero:true
-				}
-			    }]
-			}
-		    }
-		});
-	</script>
-
+	
 	</div>
  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> 
 
@@ -296,6 +276,7 @@ session_start();
     <!--    End Back To Top    -->
 
     <!--    Javascript Files    -->
+		
 
 	    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 	    <script type="text/javascript" src="js/jquery.js"></script>
@@ -307,33 +288,138 @@ session_start();
 	    <script type="text/javascript" src="js/scrollTo.js"></script>
 	    <script type="text/javascript" src="js/map.js"></script>
 	    <script type="text/javascript" src="js/main.js"></script>
+	
+	<script>
+		var p = <?php echo $p; ?>;
+		<?php $l = 0; ?>
+		var pas;
+		var tab = <?php echo json_encode($bigarray); ?>;
+		var tabi = <?php echo json_encode($poidsarray); ?>;
+		for (pas = 0; pas < p; pas++) {		
+			var ctx = document.getElementById("canvas"+pas);
+			var table = tab[pas];
+			table.shift();
+			var tabli = tabi[pas];
+			tabli.shift();
+			let myLineChart = new Chart(ctx, {
+			    type: 'line',
+			     data: {
+				labels: table,
+				datasets: [{
+				    label: "weight",
+				    data: tabli,
+				    backgroundColor: [
+					"rgba(255, 99, 132, 0.2)",
+					"rgba(54, 162, 235, 0.2)",
+					"rgba(255, 206, 86, 0.2)",
+					"rgba(75, 192, 192, 0.2)",
+					"rgba(153, 102, 255, 0.2)",
+					"rgba(255, 159, 64, 0.2)"
+				    ],
+				    borderColor: [
+					"rgba(255,99,132,1)",
+					"rgba(54, 162, 235, 1)",
+					"rgba(255, 206, 86, 1)",
+					"rgba(75, 192, 192, 1)",
+					"rgba(153, 102, 255, 1)",
+					"rgba(255, 159, 64, 1)"
+				    ],
+				    borderWidth: 1
+			}]
+		    },
+			     options: {
+				scales: {
+			    		yAxes: [{
+						ticks: {
+				    			beginAtZero:true
+				}
+			    }]
+			}
+		    }
+			});  <?php $l++; ?>
+		}
+	</script>
+
+<script>
+
+		var ctx = document.getElementById("canva");
+		var tablee = <?php echo js_array($array); ?>;
+		var tablii = <?php echo js_array($arrouille); ?>;
+		console.log(tablii);
+		var myChart = new Chart(ctx, {
+		    type: "bar",
+		    data: {
+			labels: tablii,
+			datasets: [{
+			    label: "# of relations",
+			    data: tablee,
+			    backgroundColor: [
+				"rgba(255, 99, 132, 0.2)",
+				"rgba(54, 162, 235, 0.2)",
+				"rgba(255, 206, 86, 0.2)",
+				"rgba(75, 192, 192, 0.2)",
+				"rgba(153, 102, 255, 0.2)",
+				"rgba(255, 159, 64, 0.2)"
+			    ],
+			    borderColor: [
+				"rgba(255,99,132,1)",
+				"rgba(54, 162, 235, 1)",
+				"rgba(255, 206, 86, 1)",
+				"rgba(75, 192, 192, 1)",
+				"rgba(153, 102, 255, 1)",
+				"rgba(255, 159, 64, 1)"
+			    ],
+			    borderWidth: 1
+			}]
+		    },
+		    options: {
+			scales: {
+			    yAxes: [{
+				ticks: {
+				    beginAtZero:true
+				}
+			    }]
+			}
+		    }
+		}); myChart.render();
+	</script>
+	
  	 </body>
 </html>';
 
 	<?php
 
 	function phpClient($arg) {
-	 $PORT = 9515; //the port on which we are connecting to the "remote" machine
-	 $HOST = "localhost"; //the ip of the remote machine (in this case it's the same machine)
-	 
-	 $sock = socket_create(AF_INET, SOCK_STREAM, 0) //Creating a TCP socket
-		 or die("error: could not create socket\n");
-	 
-	 $succ = socket_connect($sock, $HOST, $PORT) //Connecting to to server using that socket
-		 or die("error: could not connect to host\n");
-	 
-	$text = $arg; //the text we want to send to the server
-	socket_write($sock, $text . "\n", strlen($text) + 1) //Writing the text to the socket
-	       or die("error: failed to write to socket\n");
-	$reply = socket_read($sock, 100000) //Reading the reply from socket
-		or die("error: failed to read from socket\n");
-	  return $reply; }
+		$PORT = 9515; //the port on which we are connecting to the "remote" machine
+		$HOST = "localhost"; //the ip of the remote machine (in this case it's the same machine)
+
+		$sock = socket_create(AF_INET, SOCK_STREAM, 0) //Creating a TCP socket
+			or die("error: could not create socket\n");
+
+		$succ = socket_connect($sock, $HOST, $PORT) //Connecting to to server using that socket
+			or die("error: could not connect to host\n");
+
+		$text = $arg; //the text we want to send to the server
+		socket_write($sock, $text . "\n", strlen($text) + 1) //Writing the text to the socket
+			or die("error: failed to write to socket\n");
+
+		$buff;
+		$BUFFER_SIZE = 1000000;
+		if (false !== ($bytes = socket_recv($sock, $buff,  $BUFFER_SIZE, MSG_WAITALL))) {
+
+		} else {
+			echo "socket_recv() failed; reason: " . socket_strerror(socket_last_error($sock)) . "\n";
+		}      
+		#$reply = socket_read($sock, 500000) //Reading the reply from socket
+		#	or die("error: failed to read from socket\n");
+		socket_close($sock);
+		return $buff; 
+	}
 
 	function js_str($s)
 	{
 	    return '"' . addcslashes($s, "\0..\37\"\\") . '"';
 	}
-
 	function js_array($array)
 	{
 	    $temp = array_map('js_str', $array);
