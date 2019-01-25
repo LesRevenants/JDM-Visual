@@ -70,17 +70,18 @@ public class MasterStore implements RelationStore{
         	    		
     		if(line != null && !line.isEmpty()) {
 				String[] parts = line.split(",");	
-				if(parts.length >=3 ) {
+				if(parts.length >=5 ) {
 					Integer id = Integer.parseInt(parts[0]);
 					String name;
-					Boolean isCached = Boolean.parseBoolean(parts[parts.length-1]);
+					Boolean isCached = Boolean.parseBoolean(parts[parts.length-3]);
 										
-					if(parts.length > 3 ) { // if name contains multiple , then build the concatenation of each word parts
+					if(parts.length > 5 ) { // if name contains multiple , then build the concatenation of each word parts
 						StringBuilder completeName = new StringBuilder();
 						for(int i=1;i<parts.length-1;i++) {
 							completeName.append(parts[i]);
 						}
-						name = completeName.toString();
+						name = completeName.toString().replace("\\", "");
+						
 					}
 					else {
 						name = parts[1].replace("\\", "");         					
@@ -107,8 +108,8 @@ public class MasterStore implements RelationStore{
 		JSONObject storeObj = persistentObj.getJSONObject("stores");
 		JSONObject neo4jObj = storeObj.getJSONObject("Neo4j");
 
-		neo4jStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
-        logger.info("Neo4J store building [OK]");		
+//		neo4jStore = new Neo4J_RelationStore(neo4jObj,relationTypeStore,termStore);	
+//        logger.info("Neo4J store building [OK]");		
             
     	jdmStore = new JDM_RelationStore(termStore);
         queryFactory  = new RelationQueryFactory(termStore, relationTypeStore);
@@ -223,11 +224,10 @@ public class MasterStore implements RelationStore{
     			    JSONArray allRelations = new JSONArray();
     			    
     				for(Relation relation: queryResults.get(r_id)){
+    					
     					JSONArray relationArray = new JSONArray();
-    					String x_name = termStore.getTermName((int) relation.getX_id());
-    					
+    					String x_name = termStore.getTermName((int) relation.getX_id()); 					
     					Ambiguity amb = termStore.getAmbiguity((int) relation.getY_id());
-    					
     					String y_name;
     					
     					if(amb != null){

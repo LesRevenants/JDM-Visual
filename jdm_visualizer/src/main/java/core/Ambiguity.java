@@ -10,12 +10,12 @@ import java.util.LinkedList;
 
 public class Ambiguity {
 	
-	Integer ambigiousTermId;
-	Integer rootTermId;
+	int ambigiousTermId;
+	int rootTermId;
 	LinkedList<Integer> refTermIds;
 	
 	
-	public Ambiguity(Integer ambigiousTermId, Integer rootTermId, LinkedList<Integer> refTermIds) {
+	public Ambiguity(int ambigiousTermId, int rootTermId, LinkedList<Integer> refTermIds) {
 		super();
 		this.ambigiousTermId = ambigiousTermId;
 		this.rootTermId = rootTermId;
@@ -42,7 +42,7 @@ public class Ambiguity {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((ambigiousTermId == null) ? 0 : ambigiousTermId.hashCode());
+		result = prime * result + ambigiousTermId;
 		return result;
 	}
 
@@ -56,16 +56,12 @@ public class Ambiguity {
 		if (getClass() != obj.getClass())
 			return false;
 		Ambiguity other = (Ambiguity) obj;
-		if (ambigiousTermId == null) {
-			if (other.ambigiousTermId != null)
-				return false;
-		} else if (!ambigiousTermId.equals(other.ambigiousTermId))
+		if (ambigiousTermId != other.ambigiousTermId)
 			return false;
 		return true;
 	}
 
 
-	
 	
 	
 	

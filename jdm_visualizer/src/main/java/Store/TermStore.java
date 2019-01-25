@@ -19,7 +19,18 @@ import java.util.Map;
 
 public class TermStore {
 
+	/**
+	 * 
+	 */
     private PatriciaTrie<Integer> termsTrie;
+    
+    /** Map integer id to  */
+    private Map<Integer,String> termsByIds;
+    
+    /** */
+    private HashSet<Integer> newTerms;
+    
+
     
     /** Associate to each ambigous term the list of semantic raffinement term id
      *  ex : (avocat, id=104789) -> { 157204: 71637 (justice) , .}
@@ -30,14 +41,18 @@ public class TermStore {
 
     private PatriciaTrie<HashMap<Integer,LinkedList<Integer>>> tmpAmbiguity;
     
+    /**
+     * 
+     */
     private HashMap<Integer,ArrayList<Integer>> conflicts;
+    
+   
     
     private int resolvedAmbiguityNb, unresolvedAmbiguityNb;
     
     private int total_term_size;
 
-    /** Map integer id to  */
-    private Map<Integer,String> termsByIds;
+
     
 
     public TermStore(){
@@ -46,6 +61,7 @@ public class TermStore {
         tmpAmbiguity = new PatriciaTrie<>();
         conflicts = new HashMap<>();
         ambiguityRefs = new HashMap<>();
+        newTerms = new HashSet<>();
     }
 
   
@@ -67,6 +83,8 @@ public class TermStore {
 			
 		}
     }
+    
+
     
     public void resolveAmbiguity(){
     	if(tmpAmbiguity.isEmpty()){
@@ -115,22 +133,27 @@ public class TermStore {
 	       	 
 	       	 String[] parts = name.split(">");       	 
 	       	 if(parts.length > 1){ // ambiguity found 
+	       		 
 	       		 String rootTerm = parts[0];
 	       		 if(! rootTerm.isEmpty()){
 	       			 LinkedList<Integer> refTermIds = new LinkedList<>();
 	       			 for(int i=1;i<parts.length;i++){
+	       				 
 	       				String ambigiousTerm = parts[i];
 	       				Integer refTermId;
 		       			 try{
 		       				refTermId = Integer.parseInt(ambigiousTerm);			       		
 			       		 } catch(NumberFormatException e){ 
 			       			 refTermId = termsTrie.get(ambigiousTerm);
-//			       			 unresolvedAmbiguityNb++; 
 			       		}
-		       			tmpAmbiguity.putIfAbsent(rootTerm, new HashMap<>());
-			       		refTermIds.add(refTermId);		
+		       			if(refTermId != null) {
+		       				tmpAmbiguity.putIfAbsent(rootTerm, new HashMap<>());
+				       		refTermIds.add(refTermId);		
+		       			}
 	       			}
-	       			tmpAmbiguity.get(rootTerm).put(id, refTermIds);
+	       			if(tmpAmbiguity.containsKey(rootTerm)) {
+	       				tmpAmbiguity.get(rootTerm).put(id, refTermIds);
+	       			}
 	       		 }
 	       	 }
 	  	}
