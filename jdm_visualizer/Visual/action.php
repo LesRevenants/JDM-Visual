@@ -3,10 +3,10 @@
 //error_reporting(E_ALL); ini_set('display_errors', 1);
 session_start();
 
-	if($_POST['output'] == "on") $_POST['output'] = "true";
-	else { $_POST['output'] = "false"; }
-	if($_POST['input'] == "on") $_POST['input'] = "true";
-	else { $_POST['input'] = "false"; }
+	if($_POST['output'] == "on") $_POST['output'] = "false";
+	else { $_POST['output'] = "true"; }
+	if($_POST['input'] == "on") $_POST['input'] = "false";
+	else { $_POST['input'] = "true"; }
 	$content = "{";
 		$content .= "".'"motx":"';
 		$content .= $_POST["motx"] . '",';
@@ -144,7 +144,7 @@ session_start();
 				echo'  
 
 				<div class="one">
-				<table class="table" style="margin : auto; overflow-y:scroll; max-height: 50%; width: 500px; margin-top:3%; margin-bottom:3%;">
+				<table class="table" style="display: block; margin : auto; overflow-y:scroll !important; height: 400px; max-height: 500px !important; width: 400px; margin-top:3%; margin-bottom:3%;">
 				  <thead class="thead-dark">
 				    <tr>
 				      <th scope="col">#</th>
@@ -210,7 +210,7 @@ session_start();
 		    data: {
 			labels: tablii,
 			datasets: [{
-			    label: "# of Votes",
+			    label: "# of relations",
 			    data: tablee,
 			    backgroundColor: [
 				"rgba(255, 99, 132, 0.2)",
